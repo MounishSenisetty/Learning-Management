@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { studentLoginSchema } from "@/lib/validation";
 
+function withStudentCode<T extends Record<string, unknown>>(row: T) {
+  return {
+    ...row,
+    student_code: (row.student_code as string | null | undefined) ?? null,
+  };
+}
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -18,7 +25,7 @@ export async function POST(request: Request) {
 
     const query = supabase
       .from("students")
-      .select("id, student_code, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
       .eq("roll_number", parsed.rollNumber)
       .limit(1);
 
@@ -34,7 +41,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email does not match this roll number." }, { status: 401 });
     }
 
-    return NextResponse.json({ student }, { status: 200 });
+    return NextResponse.json({ student: withStudentCode(student) }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 400 });
   }
