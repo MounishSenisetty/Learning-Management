@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { SideRail } from "@/components/side-rail";
+import { StudentAnalyticsExplorer } from "@/components/student-analytics-explorer";
 import { clearCurrentStaff, getCurrentStaff } from "@/lib/storage";
 import { buildStudentPerformanceSummaries } from "@/lib/staff-analytics";
 import { AttemptRecord, Student } from "@/types/domain";
@@ -111,12 +112,6 @@ export default function TeacherDashboardPage() {
                   {currentRole === "admin" && <p className="mt-1 text-xs text-indigo-700">Opened with admin full-access privileges.</p>}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Link href="/admin-dashboard" className="btn btn-secondary">
-                    Admin Dashboard
-                  </Link>
-                  <Link href="/dashboard" className="btn btn-secondary">
-                    Student Dashboard
-                  </Link>
                   <button type="button" onClick={onLogout} className="btn btn-secondary">
                     Logout
                   </button>
@@ -134,6 +129,8 @@ export default function TeacherDashboardPage() {
                 <Metric title="Avg Gain" value={overview?.summary.avgGain ?? 0} precision={2} />
               </div>
             </section>
+
+            <StudentAnalyticsExplorer students={students} attempts={overview?.attempts ?? []} theme="teacher" />
 
             <section className="grid gap-6 xl:grid-cols-2">
               <div className="section-card">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { StudentAnalyticsExplorer } from "@/components/student-analytics-explorer";
 import { clearCurrentStaff, getCurrentStaff } from "@/lib/storage";
 import { buildStudentPerformanceSummaries } from "@/lib/staff-analytics";
 import { AttemptRecord, Student } from "@/types/domain";
@@ -133,15 +134,17 @@ export default function AdminDashboardPage() {
             </div>
           </section>
 
+          <StudentAnalyticsExplorer students={students} attempts={overview?.attempts ?? []} theme="admin" />
+
           <section className="grid gap-6 md:grid-cols-3">
             <Link href="/teacher-dashboard" className="section-card transition hover:shadow-lg">
               <p className="text-lg font-semibold text-slate-900">Teacher Dashboard</p>
-              <p className="mt-2 text-sm text-slate-600">Inspect the student-facing instructional workspace with all details.</p>
+              <p className="mt-2 text-sm text-slate-600">Open the teacher workspace with student selection, scores, and attempts.</p>
             </Link>
 
-            <Link href="/dashboard" className="section-card transition hover:shadow-lg">
+            <Link href="#student-analytics-summary" className="section-card transition hover:shadow-lg">
               <p className="text-lg font-semibold text-slate-900">Student Analytics View</p>
-              <p className="mt-2 text-sm text-slate-600">Open the student-facing analytics dashboard for workflow-level charts.</p>
+              <p className="mt-2 text-sm text-slate-600">Open the student analytics dashboard for workflow-level charts.</p>
             </Link>
 
             <Link href="/experiments" className="section-card transition hover:shadow-lg">
@@ -155,9 +158,9 @@ export default function AdminDashboardPage() {
             <p className="mt-2 text-sm text-slate-600">Navigate to any major area of the product without restriction.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <Link href="/teacher-dashboard" className="side-card transition hover:shadow-md">
-                Student Details Roster
+                Teacher Dashboard
               </Link>
-              <Link href="/dashboard" className="side-card transition hover:shadow-md">
+              <Link href="#student-analytics-summary" className="side-card transition hover:shadow-md">
                 Student Analytics Dashboard
               </Link>
               <Link href="/experiments" className="side-card transition hover:shadow-md">
@@ -175,7 +178,7 @@ export default function AdminDashboardPage() {
             </div>
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-2">
+          <section id="student-analytics-summary" className="grid gap-6 xl:grid-cols-2 scroll-mt-24">
             <div className="section-card">
               <h2 className="text-xl font-semibold">Student Performance Summary</h2>
               <p className="mt-2 text-sm text-slate-600">All students with score averages, experiment counts, and latest attempt details.</p>

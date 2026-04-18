@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentStaff, getCurrentStudent, getStaffDashboardPath, setFlowState } from "@/lib/storage";
+import { getCurrentStaff, getCurrentStudent, setFlowState } from "@/lib/storage";
 import { ExperimentType } from "@/types/domain";
 import { AppHeader } from "@/components/app-header";
 import { SideRail } from "@/components/side-rail";
@@ -15,7 +15,6 @@ export default function ExperimentsPage() {
   useEffect(() => {
     const staff = getCurrentStaff();
     if (staff?.role) {
-      router.replace(getStaffDashboardPath(staff.role));
       return;
     }
 
