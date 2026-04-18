@@ -124,6 +124,10 @@ export default function SimulationPage() {
 
   const checkpointScore = checkpointStats.reduce((sum, stat) => sum + (stat.passed ? 1 : 0), 0);
   const canProceed = checkpointStats.every((stat) => stat.passed);
+  const analysisIndex = checkpoints.findIndex((q) => q.section === "analysis");
+  const nonAnalysisComplete = checkpointStats.every((stat, idx) => idx === analysisIndex || stat.passed);
+  const simulationReadyForPostTest = activeStep >= 5 && nonAnalysisComplete && pendingCheckpointIndex === null;
+  const simulationFinished = activeStep >= 5 && canProceed && pendingCheckpointIndex === null;
 
   function updateCheckpointSelection(optionIdx: number) {
     if (pendingCheckpointIndex === null) return;
@@ -178,7 +182,21 @@ export default function SimulationPage() {
   }
 
   function completeSimulation() {
-    const analysisIndex = checkpoints.findIndex((q) => q.section === "analysis");
+    if (!simulationReadyForPostTest) {
+      if (pendingCheckpointIndex !== null) {
+        setCheckpointMessage("Finish this section checkpoint first before continuing to the post-test.");
+      } else if (activeStep < 5) {
+        setCheckpointMessage("Complete all simulation sections before opening the post-test.");
+      } else {
+        const firstPending = checkpointStats.findIndex((stat, idx) => idx !== analysisIndex && !stat.passed);
+        if (firstPending >= 0) {
+          setPendingCheckpointIndex(firstPending);
+          setCheckpointMessage("Complete all section checkpoints correctly before proceeding to post-test.");
+        }
+      }
+      return;
+    }
+
     if (analysisIndex >= 0 && !checkpointStats[analysisIndex]?.passed) {
       setPendingCheckpointIndex(analysisIndex);
       setCheckpointMessage("Complete the analysis checkpoint correctly before proceeding to the post-test.");
@@ -244,8 +262,13 @@ export default function SimulationPage() {
         <button className="pointer-events-auto btn btn-secondary" type="button" onClick={toggleFullscreen}>
           {fullscreen ? "Exit Full Screen" : "Full Screen"}
         </button>
-        <button className="pointer-events-auto btn btn-primary" onClick={completeSimulation}>
-          Proceed to Post-test
+        <button
+          className="pointer-events-auto btn btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={completeSimulation}
+          disabled={!simulationReadyForPostTest}
+          title={simulationReadyForPostTest ? "Proceed to Post-test" : "Complete required simulation sections first"}
+        >
+          {simulationFinished ? "Proceed to Post-test" : simulationReadyForPostTest ? "Validate Analysis Checkpoint" : "Post-test Locked"}
         </button>
       </div>
 

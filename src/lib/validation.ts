@@ -9,7 +9,7 @@ export const createStudentSchema = z.object({
   program: z.string().min(2).max(120),
   yearOfStudy: z.number().int().min(1).max(12),
   institution: z.string().max(160).optional().or(z.literal("")),
-  priorLabExperience: z.boolean().optional(),
+  priorLabExperience: z.boolean(),
   cohort: z.string().max(80).optional().or(z.literal("")),
 });
 
@@ -35,7 +35,27 @@ export const createAttemptSchema = z.object({
   timeTakenSeconds: z.number().int().positive(),
   engagementScore: z.number().min(0).max(100),
   retentionScore: z.number().min(0).max(100).nullable().optional(),
+  preTestDurationSeconds: z.number().int().min(0).optional(),
+  postTestDurationSeconds: z.number().int().min(0).optional(),
+  workflowDurationSeconds: z.number().int().min(0).optional(),
+  simulationSkipped: z.boolean().optional(),
   interactionCount: z.number().int().min(0).optional(),
+  sectionDurations: z
+    .array(
+      z.object({
+        section: z.enum(["equipment", "preparation", "calibration", "recording", "analysis"]),
+        durationSeconds: z.number().int().min(0),
+      }),
+    )
+    .optional(),
+  integrityIndicators: z
+    .object({
+      tabSwitchCount: z.number().int().min(0),
+      inactivityCount: z.number().int().min(0),
+      inactivitySeconds: z.number().int().min(0),
+      abnormalPatternScore: z.number().min(0).max(100),
+    })
+    .optional(),
   checkpointTelemetry: z
     .array(
       z.object({

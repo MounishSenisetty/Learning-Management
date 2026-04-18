@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, BarChart, Bar } from "recharts";
-import { getCurrentStudent } from "@/lib/storage";
+import { getCurrentStaff, getCurrentStudent, getStaffDashboardPath } from "@/lib/storage";
 import { AttemptRecord } from "@/types/domain";
+import { AppHeader } from "@/components/app-header";
+import { SideRail } from "@/components/side-rail";
 
 interface OverviewResponse {
   attempts: AttemptRecord[];
@@ -16,19 +19,39 @@ interface OverviewResponse {
     avgEfficiency: number;
   };
   experimentBreakdown?: {
-    EMG: { count: number; avgGain: number; avgTime: number; avgPost: number };
-    ECG: { count: number; avgGain: number; avgTime: number; avgPost: number };
+    EMG: { count: number; avgPre: number; avgGain: number; avgTime: number; avgPost: number };
+    ECG: { count: number; avgPre: number; avgGain: number; avgTime: number; avgPost: number };
   };
-  timeImprovements?: Array<{ key: string; fromAttempt: number; toAttempt: number; improvementSeconds: number }>;
+  timeImprovements?: Array<{
+    key: string;
+    experimentType?: string;
+    fromAttempt: number;
+    toAttempt: number;
+    fromAttemptLabel?: string;
+    toAttemptLabel?: string;
+    improvementSeconds: number;
+  }>;
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const staff = getCurrentStaff();
+    if (staff?.role) {
+      router.replace(getStaffDashboardPath(staff.role));
+      return;
+    }
+
     const student = getCurrentStudent();
-    const url = student?.id ? `/api/analytics/student/${student.id}` : "/api/analytics/overview";
+    if (!student?.id) {
+      router.replace("/login");
+      return;
+    }
+
+    const url = `/api/analytics/student/${student.id}`;
 
     fetch(url)
       .then(async (res) => {
@@ -40,18 +63,46 @@ export default function DashboardPage() {
       })
       .then(setOverview)
       .catch((e) => setError(e.message));
-  }, []);
+  }, [router]);
 
   const trend = useMemo(() => {
     if (!overview) return [];
-    return overview.attempts.map((item) => ({
-      attempt: `A${item.attempt_number}`,
+    const sorted = [...overview.attempts].sort((a, b) => {
+      const left = new Date(a.created_at).getTime();
+      const right = new Date(b.created_at).getTime();
+      return left - right;
+    });
+
+    return sorted.map((item) => ({
+      attempt: `${item.experiment_type}-A${item.attempt_number}`,
       pre: item.pre_test_score,
       post: item.post_test_score,
       gain: item.learning_gain,
       time: item.time_taken_seconds,
       type: item.experiment_type,
     }));
+  }, [overview]);
+
+  const emgTimeTrend = useMemo(() => {
+    if (!overview) return [];
+    return overview.attempts
+      .filter((item) => item.experiment_type === "EMG")
+      .sort((a, b) => a.attempt_number - b.attempt_number)
+      .map((item) => ({
+        attempt: `A${item.attempt_number}`,
+        time: item.time_taken_seconds,
+      }));
+  }, [overview]);
+
+  const ecgTimeTrend = useMemo(() => {
+    if (!overview) return [];
+    return overview.attempts
+      .filter((item) => item.experiment_type === "ECG")
+      .sort((a, b) => a.attempt_number - b.attempt_number)
+      .map((item) => ({
+        attempt: `A${item.attempt_number}`,
+        time: item.time_taken_seconds,
+      }));
   }, [overview]);
 
   const experimentCompare = useMemo(() => {
@@ -71,117 +122,194 @@ export default function DashboardPage() {
   }, [overview]);
 
   return (
-    <main className="page-shell">
-      <section className="content-card max-w-6xl">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-            <p className="mt-2 text-slate-600">Pre/post performance, time efficiency, and attempt-wise trends.</p>
-          </div>
-          <Link href="/experiments" className="btn btn-primary">
-            Go To Experiments
-          </Link>
-        </div>
+    <>
+      <AppHeader />
+      <main className="page-shell">
+        <section className="layout-container workspace-grid">
+          <SideRail />
+          <div className="workspace-main">
+            <section className="section-card">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h1 className="text-4xl font-bold">Analytics Dashboard</h1>
+                  <p className="mt-2 text-slate-600">A student-specific analytics view for performance, efficiency, and attempt-wise progression.</p>
+                </div>
+                <Link href="/experiments" className="btn btn-primary">
+                  Go To Experiments
+                </Link>
+              </div>
+              {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+            </section>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-
-        {overview && (
-          <>
-            <div className="mt-6 grid gap-3 md:grid-cols-5">
+            {overview && (
+              <>
+                <section className="section-card">
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+              <Metric title="Attempts" value={overview.attempts.length} precision={0} />
               <Metric title="Avg Pre" value={overview.summary.avgPre} />
               <Metric title="Avg Post" value={overview.summary.avgPost} />
               <Metric title="Avg Gain" value={overview.summary.avgGain} />
               <Metric title="Norm Gain" value={overview.summary.avgNormalizedGain} />
               <Metric title="Efficiency" value={overview.summary.avgEfficiency} precision={4} />
-            </div>
+                  </div>
+                </section>
 
-            <div className="mt-8 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 p-4">
-                <h2 className="font-semibold">Pre vs Post Scores</h2>
-                <div className="mt-4 h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={trend}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="attempt" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="pre" fill="#0284c7" />
-                      <Bar dataKey="post" fill="#16a34a" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+                {overview.experimentBreakdown && (
+                  <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                    <div className="section-card">
+                      <h2 className="text-xl font-semibold">EMG Details</h2>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <Metric title="Attempts" value={overview.experimentBreakdown.EMG.count} precision={0} />
+                    <Metric title="Avg Pre" value={overview.experimentBreakdown.EMG.avgPre} />
+                    <Metric title="Avg Post" value={overview.experimentBreakdown.EMG.avgPost} />
+                    <Metric title="Avg Gain" value={overview.experimentBreakdown.EMG.avgGain} />
+                    <Metric title="Avg Time (s)" value={overview.experimentBreakdown.EMG.avgTime} />
+                      </div>
+                    </div>
 
-              <div className="rounded-xl border border-slate-200 p-4">
-                <h2 className="font-semibold">Time Reduction Across Attempts</h2>
-                <div className="mt-4 h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trend}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="attempt" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line dataKey="time" stroke="#dc2626" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+                    <div className="section-card">
+                      <h2 className="text-xl font-semibold">ECG Details</h2>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <Metric title="Attempts" value={overview.experimentBreakdown.ECG.count} precision={0} />
+                    <Metric title="Avg Pre" value={overview.experimentBreakdown.ECG.avgPre} />
+                    <Metric title="Avg Post" value={overview.experimentBreakdown.ECG.avgPost} />
+                    <Metric title="Avg Gain" value={overview.experimentBreakdown.ECG.avgGain} />
+                    <Metric title="Avg Time (s)" value={overview.experimentBreakdown.ECG.avgTime} />
+                      </div>
+                    </div>
+                  </section>
+                )}
 
-              <div className="rounded-xl border border-slate-200 p-4">
-                <h2 className="font-semibold">EMG vs ECG Performance</h2>
-                <div className="mt-4 h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={experimentCompare}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="type" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="avgGain" fill="#7c3aed" />
-                      <Bar dataKey="avgPost" fill="#0ea5e9" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
+                <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  <div className="section-card">
+                    <h2 className="text-xl font-semibold">Pre vs Post Scores</h2>
+                    <div className="mt-4 h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={trend}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="attempt" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="pre" fill="#0284c7" />
+                          <Bar dataKey="post" fill="#16a34a" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
 
-            <div className="mt-6 rounded-xl border border-slate-200 p-4">
-              <h2 className="font-semibold">Time Improvement Between Attempts</h2>
-              <div className="mt-3 overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="px-2 py-2">Student/Experiment</th>
-                      <th className="px-2 py-2">From</th>
-                      <th className="px-2 py-2">To</th>
-                      <th className="px-2 py-2">Improvement (s)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(overview.timeImprovements ?? []).map((row) => (
-                      <tr key={`${row.key}-${row.fromAttempt}-${row.toAttempt}`} className="border-b border-slate-100">
-                        <td className="px-2 py-2">{row.key}</td>
-                        <td className="px-2 py-2">{row.fromAttempt}</td>
-                        <td className="px-2 py-2">{row.toAttempt}</td>
-                        <td className="px-2 py-2">{row.improvementSeconds.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-      </section>
-    </main>
+                  <div className="section-card">
+                    <h2 className="text-xl font-semibold">Time Reduction Across Attempts</h2>
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-slate-700">EMG Attempts</p>
+                        <div className="mt-2 h-60">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={emgTimeTrend}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="attempt" />
+                              <YAxis />
+                              <Tooltip formatter={(value) => [value, "Time (s)"]} />
+                              <Legend />
+                              <Line dataKey="time" name="EMG Time" stroke="#dc2626" strokeWidth={2} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-medium text-slate-700">ECG Attempts</p>
+                        <div className="mt-2 h-60">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={ecgTimeTrend}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="attempt" />
+                              <YAxis />
+                              <Tooltip formatter={(value) => [value, "Time (s)"]} />
+                              <Legend />
+                              <Line dataKey="time" name="ECG Time" stroke="#ea580c" strokeWidth={2} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  <div className="section-card">
+                    <h2 className="text-xl font-semibold">EMG vs ECG Performance</h2>
+                    <div className="mt-4 h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={experimentCompare}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="type" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="avgGain" fill="#7c3aed" />
+                          <Bar dataKey="avgPost" fill="#0ea5e9" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="section-card">
+                    <h2 className="text-xl font-semibold">Dashboard Guide</h2>
+                    <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+                      <div className="side-card">
+                        <p className="font-medium text-slate-800">KPI Summary</p>
+                        <p className="mt-1 text-sm text-slate-600">Top cards provide aggregate student metrics for the selected attempts.</p>
+                      </div>
+                      <div className="side-card">
+                        <p className="font-medium text-slate-800">Experiment Breakdown</p>
+                        <p className="mt-1 text-sm text-slate-600">EMG and ECG are separated to avoid misleading combined averages.</p>
+                      </div>
+                      <div className="side-card">
+                        <p className="font-medium text-slate-800">Attempt Tracking</p>
+                        <p className="mt-1 text-sm text-slate-600">Use line charts and improvement rows to observe time trend changes.</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="section-card">
+                  <h2 className="text-xl font-semibold">Time Improvement Between Attempts</h2>
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200">
+                          <th className="px-2 py-2">Experiment</th>
+                          <th className="px-2 py-2">From</th>
+                          <th className="px-2 py-2">To</th>
+                          <th className="px-2 py-2">Improvement (s)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(overview.timeImprovements ?? []).map((row) => (
+                          <tr key={`${row.key}-${row.fromAttempt}-${row.toAttempt}`} className="border-b border-slate-100">
+                            <td className="px-2 py-2">{row.experimentType ?? row.key.split("-").slice(-1)[0] ?? row.key}</td>
+                            <td className="px-2 py-2">{row.fromAttemptLabel ?? row.fromAttempt}</td>
+                            <td className="px-2 py-2">{row.toAttemptLabel ?? row.toAttempt}</td>
+                            <td className="px-2 py-2">{row.improvementSeconds.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </>
+            )}
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
 
 function Metric({ title, value, precision = 2 }: { title: string; value: number; precision?: number }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3">
+    <div className="metric-card">
       <p className="text-xs uppercase tracking-wide text-slate-500">{title}</p>
       <p className="mt-2 text-2xl font-bold">{Number(value || 0).toFixed(precision)}</p>
     </div>

@@ -69,8 +69,32 @@ export async function POST(request: Request) {
           interactionCount: parsed.interactionCount,
           engagementScore: parsed.engagementScore,
           timeTakenSeconds: parsed.timeTakenSeconds,
+          simulationSkipped: parsed.simulationSkipped ?? false,
+          preTestDurationSeconds: parsed.preTestDurationSeconds ?? 0,
+          postTestDurationSeconds: parsed.postTestDurationSeconds ?? 0,
+          workflowDurationSeconds: parsed.workflowDurationSeconds ?? parsed.timeTakenSeconds,
+          integrityIndicators: parsed.integrityIndicators ?? {
+            tabSwitchCount: 0,
+            inactivityCount: 0,
+            inactivitySeconds: 0,
+            abnormalPatternScore: 0,
+          },
         },
       });
+    }
+
+    if (parsed.sectionDurations?.length) {
+      for (const sectionDuration of parsed.sectionDurations) {
+        events.push({
+          attempt_id: attempt.id,
+          student_id: parsed.studentId,
+          event_type: "section_duration",
+          event_value: {
+            section: sectionDuration.section,
+            durationSeconds: sectionDuration.durationSeconds,
+          },
+        });
+      }
     }
 
     if (parsed.checkpointTelemetry?.length) {

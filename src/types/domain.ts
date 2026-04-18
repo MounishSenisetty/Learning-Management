@@ -2,6 +2,7 @@ export type ExperimentType = "EMG" | "ECG";
 
 export interface Student {
   id: string;
+  student_code: string | null;
   roll_number: string;
   full_name: string;
   email: string | null;

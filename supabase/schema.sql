@@ -2,6 +2,7 @@ create extension if not exists pgcrypto;
 
 create table if not exists students (
   id uuid primary key default gen_random_uuid(),
+  student_code text unique,
   roll_number text unique not null,
   full_name text not null,
   email text unique,
@@ -22,6 +23,13 @@ alter table students add column if not exists year_of_study integer check (year_
 alter table students add column if not exists institution text;
 alter table students add column if not exists prior_lab_experience boolean;
 alter table students add column if not exists cohort text;
+alter table students add column if not exists student_code text;
+
+update students
+set student_code = 'STU-' || upper(substring(replace(id::text, '-', '') from 1 for 8))
+where student_code is null;
+
+create unique index if not exists idx_students_student_code_unique on students(student_code);
 
 create table if not exists experiments (
   id uuid primary key default gen_random_uuid(),

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     const query = supabase
       .from("students")
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
+      .select("id, student_code, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
       .eq("roll_number", parsed.rollNumber)
       .limit(1);
 

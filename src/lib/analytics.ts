@@ -40,12 +40,14 @@ export function computeExperimentBreakdown(attempts: Array<Record<string, unknow
   return {
     EMG: {
       count: emg.length,
+      avgPre: average(emg.map((a) => Number(a.pre_test_score ?? 0))),
       avgGain: average(emg.map((a) => Number(a.learning_gain ?? 0))),
       avgTime: average(emg.map((a) => Number(a.time_taken_seconds ?? 0))),
       avgPost: average(emg.map((a) => Number(a.post_test_score ?? 0))),
     },
     ECG: {
       count: ecg.length,
+      avgPre: average(ecg.map((a) => Number(a.pre_test_score ?? 0))),
       avgGain: average(ecg.map((a) => Number(a.learning_gain ?? 0))),
       avgTime: average(ecg.map((a) => Number(a.time_taken_seconds ?? 0))),
       avgPost: average(ecg.map((a) => Number(a.post_test_score ?? 0))),
@@ -63,17 +65,35 @@ export function computeTimeImprovements(attempts: Array<Record<string, unknown>>
     grouped.set(key, list);
   }
 
-  const improvements: Array<{ key: string; fromAttempt: number; toAttempt: number; improvementSeconds: number }> = [];
+  const improvements: Array<{
+    key: string;
+    experimentType: string;
+    fromAttempt: number;
+    toAttempt: number;
+    fromAttemptLabel: string;
+    toAttemptLabel: string;
+    improvementSeconds: number;
+  }> = [];
 
   for (const [key, list] of grouped) {
-    const sorted = [...list].sort((a, b) => Number(a.attempt_number) - Number(b.attempt_number));
+    const sorted = [...list].sort((a, b) => {
+      const left = new Date(String(a.created_at ?? "")).getTime();
+      const right = new Date(String(b.created_at ?? "")).getTime();
+      return left - right;
+    });
     for (let idx = 1; idx < sorted.length; idx++) {
       const prev = Number(sorted[idx - 1].time_taken_seconds ?? 0);
       const curr = Number(sorted[idx].time_taken_seconds ?? 0);
+      const experimentType = String(sorted[idx].experiment_type ?? "Unknown");
+      const fromAttempt = Number(sorted[idx - 1].attempt_number ?? 0);
+      const toAttempt = Number(sorted[idx].attempt_number ?? 0);
       improvements.push({
         key,
-        fromAttempt: Number(sorted[idx - 1].attempt_number),
-        toAttempt: Number(sorted[idx].attempt_number),
+        experimentType,
+        fromAttempt,
+        toAttempt,
+        fromAttemptLabel: `${experimentType}-A${fromAttempt} (Run ${idx})`,
+        toAttemptLabel: `${experimentType}-A${toAttempt} (Run ${idx + 1})`,
         improvementSeconds: prev - curr,
       });
     }
@@ -112,4 +132,93 @@ export function independentTTest(groupA: number[], groupB: number[]) {
   const tStatistic = denominator === 0 ? 0 : (meanA - meanB) / denominator;
 
   return { n1, n2, tStatistic, meanA, meanB };
+}
+
+interface EventRow {
+  attempt_id: string;
+  event_type: string;
+  event_value: Record<string, unknown> | null;
+}
+
+export function summarizeWorkflowEvents(events: EventRow[]) {
+  const simulationEvents = events.filter((event) => event.event_type === "simulation_summary");
+  const sectionEvents = events.filter((event) => event.event_type === "section_duration");
+
+  const workflowDurations = simulationEvents.map((event) => Number(event.event_value?.workflowDurationSeconds ?? 0));
+  const preDurations = simulationEvents.map((event) => Number(event.event_value?.preTestDurationSeconds ?? 0));
+  const simulationDurations = simulationEvents.map((event) => Number(event.event_value?.timeTakenSeconds ?? 0));
+  const postDurations = simulationEvents.map((event) => Number(event.event_value?.postTestDurationSeconds ?? 0));
+  const engagement = simulationEvents.map((event) => Number(event.event_value?.engagementScore ?? 0));
+
+  const integrity = simulationEvents.reduce(
+    (acc, event) => {
+      const indicators = (event.event_value?.integrityIndicators ?? {}) as Record<string, unknown>;
+      acc.tabSwitchCount += Number(indicators.tabSwitchCount ?? 0);
+      acc.inactivityCount += Number(indicators.inactivityCount ?? 0);
+      acc.inactivitySeconds += Number(indicators.inactivitySeconds ?? 0);
+      acc.abnormalPatternScore += Number(indicators.abnormalPatternScore ?? 0);
+      acc.simulationSkipped += event.event_value?.simulationSkipped ? 1 : 0;
+      return acc;
+    },
+    {
+      tabSwitchCount: 0,
+      inactivityCount: 0,
+      inactivitySeconds: 0,
+      abnormalPatternScore: 0,
+      simulationSkipped: 0,
+    },
+  );
+
+  const sectionAccumulator = new Map<string, number[]>();
+  for (const event of sectionEvents) {
+    const section = String(event.event_value?.section ?? "unknown");
+    const duration = Number(event.event_value?.durationSeconds ?? 0);
+    const values = sectionAccumulator.get(section) ?? [];
+    values.push(duration);
+    sectionAccumulator.set(section, values);
+  }
+
+  const sectionTime = Array.from(sectionAccumulator.entries()).map(([section, durations]) => ({
+    section,
+    avgDurationSeconds: average(durations),
+  }));
+
+  const simulationCount = Math.max(1, simulationEvents.length);
+  return {
+    avgWorkflowDurationSeconds: average(workflowDurations),
+    avgPreTestDurationSeconds: average(preDurations),
+    avgSimulationDurationSeconds: average(simulationDurations),
+    avgPostTestDurationSeconds: average(postDurations),
+    avgEngagementScore: average(engagement),
+    sectionTime,
+    integrity: {
+      totalTabSwitches: integrity.tabSwitchCount,
+      totalInactivityCount: integrity.inactivityCount,
+      totalInactivitySeconds: integrity.inactivitySeconds,
+      avgAbnormalPatternScore: integrity.abnormalPatternScore / simulationCount,
+      simulationSkippedCount: integrity.simulationSkipped,
+    },
+  };
+}
+
+export function computeCohortInsights(attempts: Array<Record<string, unknown>>) {
+  const grouped = new Map<string, Array<Record<string, unknown>>>();
+
+  for (const attempt of attempts) {
+    const cohort = String(attempt.cohort ?? "Unassigned");
+    const rows = grouped.get(cohort) ?? [];
+    rows.push(attempt);
+    grouped.set(cohort, rows);
+  }
+
+  return Array.from(grouped.entries())
+    .map(([cohort, rows]) => ({
+      cohort,
+      attempts: rows.length,
+      uniqueStudents: new Set(rows.map((row) => String(row.student_id))).size,
+      avgPostScore: average(rows.map((row) => Number(row.post_test_score ?? 0))),
+      avgGain: average(rows.map((row) => Number(row.learning_gain ?? 0))),
+      avgTimeTakenSeconds: average(rows.map((row) => Number(row.time_taken_seconds ?? 0))),
+    }))
+    .sort((a, b) => b.avgPostScore - a.avgPostScore);
 }
