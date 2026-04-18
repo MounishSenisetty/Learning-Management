@@ -32,7 +32,7 @@ export default function SimulationPage() {
   const router = useRouter();
   const type = (params.type || "ECG").toUpperCase() as ExperimentType;
 
-  const frameContainerRef = useRef<HTMLDivElement | null>(null);
+  const simulationShellRef = useRef<HTMLElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const previousStepRef = useRef<number>(-1);
   const checkpoints = useMemo(() => getSectionCheckpointQuestions(type), [type]);
@@ -113,10 +113,10 @@ export default function SimulationPage() {
   }
 
   async function toggleFullscreen() {
-    if (!frameContainerRef.current) return;
+    if (!simulationShellRef.current) return;
 
     if (!document.fullscreenElement) {
-      await frameContainerRef.current.requestFullscreen();
+      await simulationShellRef.current.requestFullscreen();
     } else {
       await document.exitFullscreen();
     }
@@ -246,8 +246,8 @@ export default function SimulationPage() {
   const pendingStat = pendingCheckpointIndex !== null ? checkpointStats[pendingCheckpointIndex] : null;
 
   return (
-    <main className="relative h-screen w-full overflow-hidden bg-slate-950" onClick={() => setClicks((prev) => prev + 1)}>
-      <div ref={frameContainerRef} className="absolute inset-0">
+    <main ref={simulationShellRef} className="relative h-screen w-full overflow-hidden bg-slate-950" onClick={() => setClicks((prev) => prev + 1)}>
+      <div className="absolute inset-0">
         <iframe
           ref={iframeRef}
           src={`/labs/${type}/index.html`}
