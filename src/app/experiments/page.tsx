@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentStaff, getCurrentStudent, setFlowState } from "@/lib/storage";
 import { ExperimentType } from "@/types/domain";
@@ -10,21 +10,18 @@ import { SideRail } from "@/components/side-rail";
 
 export default function ExperimentsPage() {
   const router = useRouter();
-  const [studentName] = useState(() => getCurrentStudent()?.full_name ?? "Student");
+  const staffRole = useSyncExternalStore(subscribeSession, getStaffRoleSnapshot, getServerStaffRoleSnapshot);
+  const student = useSyncExternalStore(subscribeSession, getStudentSnapshot, getServerStudentSnapshot);
+  const hasStudent = Boolean(student?.id);
+  const isGuest = !staffRole && !hasStudent;
+  const studentName = student?.full_name ?? "Student";
 
-  useEffect(() => {
-    const staff = getCurrentStaff();
-    if (staff?.role) {
+  function chooseExperiment(type: ExperimentType) {
+    if (!hasStudent) {
+      router.push("/login");
       return;
     }
 
-    const student = getCurrentStudent();
-    if (!student?.id) {
-      router.replace("/login");
-    }
-  }, [router]);
-
-  function chooseExperiment(type: ExperimentType) {
     setFlowState({ experimentType: type });
   }
 
@@ -36,31 +33,59 @@ export default function ExperimentsPage() {
           <SideRail />
           <div className="workspace-main">
             <section className="section-card">
-              <h1 className="text-4xl font-bold">Welcome, {studentName}</h1>
-              <p className="mt-2 text-slate-600">Choose an experiment track and begin the guided evaluation workflow.</p>
+              <h1 className="text-4xl font-bold">{isGuest ? "Experiments" : `Welcome, ${studentName}`}</h1>
+              <p className="mt-2 text-slate-600">
+                {isGuest
+                  ? "Login to start an experiment workflow. You can still browse available tracks below."
+                  : "Choose an experiment track and begin the guided evaluation workflow."}
+              </p>
 
               <div className="mt-8 grid gap-5 xl:grid-cols-2">
-          <Link
-            href="/pre-test/ECG"
-            className="group rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-            onClick={() => chooseExperiment("ECG")}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-700">Track A</p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-900">ECG</h2>
-            <p className="mt-3 text-sm text-slate-600">Electrocardiography acquisition, waveform interpretation, and clinical pattern analysis.</p>
-            <p className="mt-5 text-sm font-semibold text-cyan-700 group-hover:text-cyan-800">Begin ECG workflow</p>
-          </Link>
+                {hasStudent ? (
+                  <>
+                    <Link
+                      href="/pre-test/ECG"
+                      className="group rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                      onClick={() => chooseExperiment("ECG")}
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-700">Track A</p>
+                      <h2 className="mt-2 text-2xl font-semibold text-slate-900">ECG</h2>
+                      <p className="mt-3 text-sm text-slate-600">Electrocardiography acquisition, waveform interpretation, and clinical pattern analysis.</p>
+                      <p className="mt-5 text-sm font-semibold text-cyan-700 group-hover:text-cyan-800">Begin ECG workflow</p>
+                    </Link>
 
-          <Link
-            href="/pre-test/EMG"
-            className="group rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-            onClick={() => chooseExperiment("EMG")}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-700">Track B</p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-900">EMG</h2>
-            <p className="mt-3 text-sm text-slate-600">Electromyography setup, motor-unit recording, and effort-linked signal analytics.</p>
-            <p className="mt-5 text-sm font-semibold text-cyan-700 group-hover:text-cyan-800">Begin EMG workflow</p>
-          </Link>
+                    <Link
+                      href="/pre-test/EMG"
+                      className="group rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                      onClick={() => chooseExperiment("EMG")}
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-700">Track B</p>
+                      <h2 className="mt-2 text-2xl font-semibold text-slate-900">EMG</h2>
+                      <p className="mt-3 text-sm text-slate-600">Electromyography setup, motor-unit recording, and effort-linked signal analytics.</p>
+                      <p className="mt-5 text-sm font-semibold text-cyan-700 group-hover:text-cyan-800">Begin EMG workflow</p>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-700">Track A</p>
+                      <h2 className="mt-2 text-2xl font-semibold text-slate-900">ECG</h2>
+                      <p className="mt-3 text-sm text-slate-600">Electrocardiography acquisition, waveform interpretation, and clinical pattern analysis.</p>
+                      <Link href="/login" className="mt-5 inline-block text-sm font-semibold text-cyan-700 hover:text-cyan-800">
+                        Login to start ECG workflow
+                      </Link>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-700">Track B</p>
+                      <h2 className="mt-2 text-2xl font-semibold text-slate-900">EMG</h2>
+                      <p className="mt-3 text-sm text-slate-600">Electromyography setup, motor-unit recording, and effort-linked signal analytics.</p>
+                      <Link href="/login" className="mt-5 inline-block text-sm font-semibold text-cyan-700 hover:text-cyan-800">
+                        Login to start EMG workflow
+                      </Link>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
 
@@ -86,4 +111,37 @@ export default function ExperimentsPage() {
       </main>
     </>
   );
+}
+
+function subscribeSession(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = () => onStoreChange();
+  window.addEventListener("storage", handler);
+  window.addEventListener("staff-session-changed", handler);
+  window.addEventListener("student-session-changed", handler);
+
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener("staff-session-changed", handler);
+    window.removeEventListener("student-session-changed", handler);
+  };
+}
+
+function getStaffRoleSnapshot() {
+  return getCurrentStaff()?.role ?? null;
+}
+
+function getServerStaffRoleSnapshot() {
+  return null;
+}
+
+function getStudentSnapshot() {
+  return getCurrentStudent();
+}
+
+function getServerStudentSnapshot() {
+  return null;
 }

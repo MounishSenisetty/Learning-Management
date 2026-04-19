@@ -2,18 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-
-const routes = [
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/experiments", label: "Experiments", icon: "🧪" },
-  { href: "/pre-test/ECG", label: "Pre-test", icon: "📝" },
-];
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { getCurrentStaff, getCurrentStudent } from "@/lib/storage";
 
 export function SideRail() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
   const asideRef = useRef<HTMLElement | null>(null);
+  const staffRole = useSyncExternalStore(subscribeSession, getStaffRoleSnapshot, getServerStaffRoleSnapshot);
+  const hasStudent = useSyncExternalStore(subscribeSession, getHasStudentSnapshot, getServerHasStudentSnapshot);
+  const hasAuthenticatedUser = Boolean(staffRole || hasStudent);
+
+  const routes = [
+    { key: "dashboard", href: hasStudent ? "/dashboard" : "/login", label: "Dashboard", icon: "📊" },
+    { key: "experiments", href: "/experiments", label: "Experiments", icon: "🧪" },
+    { key: "pre-test", href: hasAuthenticatedUser ? "/pre-test/ECG" : "/login", label: "Pre-test", icon: "📝" },
+  ];
 
   useEffect(() => {
     const workspace = asideRef.current?.closest(".workspace-grid") as HTMLElement | null;
@@ -44,7 +48,7 @@ export function SideRail() {
               const active = pathname === route.href || pathname?.startsWith(route.href);
               return (
                 <Link
-                  key={route.href}
+                  key={route.key}
                   href={route.href}
                   title={route.label}
                   className={`block rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -74,4 +78,37 @@ export function SideRail() {
       </div>
     </aside>
   );
+}
+
+function subscribeSession(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = () => onStoreChange();
+  window.addEventListener("storage", handler);
+  window.addEventListener("staff-session-changed", handler);
+  window.addEventListener("student-session-changed", handler);
+
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener("staff-session-changed", handler);
+    window.removeEventListener("student-session-changed", handler);
+  };
+}
+
+function getStaffRoleSnapshot() {
+  return getCurrentStaff()?.role ?? null;
+}
+
+function getServerStaffRoleSnapshot() {
+  return null;
+}
+
+function getHasStudentSnapshot() {
+  return Boolean(getCurrentStudent()?.id);
+}
+
+function getServerHasStudentSnapshot() {
+  return false;
 }

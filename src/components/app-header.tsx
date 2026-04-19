@@ -11,7 +11,6 @@ const studentLinks = [
   { href: "/teacher-login", label: "Teacher Login" },
   { href: "/admin-login", label: "Admin Login" },
   { href: "/experiments", label: "Experiments" },
-  { href: "/dashboard", label: "Dashboard" },
 ];
 
 export function AppHeader() {
