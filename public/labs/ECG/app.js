@@ -190,7 +190,7 @@
             case 1: return state.equipmentExplored.size >= 6;
             case 2: return state.prepState.placed.size >= REQUIRED_ELECTRODES.length;
             case 3: return state.calibrated;
-            case 4: return state.trialsSaved >= 1;
+            case 4: return state.trialsSaved >= 4;
             case 5: return true;
             default: return true;
         }
@@ -201,7 +201,7 @@
             1: 'Please explore all 6 equipment items before proceeding.',
             2: 'Please complete all preparation steps and place all electrodes.',
             3: 'Please run the calibration test before recording.',
-            4: 'Please save at least one trial recording.'
+            4: 'Please record and save all 4 rhythm conditions (Normal, Tachycardia, Bradycardia, Irregular).'
         };
         const msg = messages[state.currentStep] || 'Complete the current step first.';
         alert('⚠️ ' + msg);
@@ -541,7 +541,11 @@
         document.getElementById('stop-btn').addEventListener('click', stopRecording);
         document.getElementById('save-btn').addEventListener('click', saveTrial);
         document.getElementById('rec-next-btn').addEventListener('click', () => {
-            goToStep(5);
+            if (state.trialsSaved >= 4) {
+                goToStep(5);
+            } else {
+                showStepRequirementMessage();
+            }
         });
 
         // Analysis tabs
@@ -1396,8 +1400,36 @@
         state.signalBuffer = [];
         state.signalOffset = 0;
         updateConditionInfo();
+        updateRecordingProgressUI();
         displaySignalQualityFromPlacement();
         drawECGBaseline();
+    }
+
+    function updateRecordingProgressUI() {
+        const trialCountEl = document.getElementById('trial-count');
+        if (trialCountEl) {
+            trialCountEl.textContent = state.trialsSaved;
+        }
+
+        const requirementEl = document.getElementById('recording-requirement');
+        if (requirementEl) {
+            const allConditions = ['normal', 'tachycardia', 'bradycardia', 'irregular'];
+            const missing = allConditions.filter((cond) => !state.trials[cond]);
+
+            if (missing.length === 0) {
+                requirementEl.textContent = 'All 4 rhythm conditions recorded. You can proceed to Analysis.';
+                requirementEl.classList.add('ready');
+            } else {
+                const formatted = missing.map((cond) => engine.conditions[cond].name).join(', ');
+                requirementEl.textContent = `Record remaining condition(s): ${formatted}`;
+                requirementEl.classList.remove('ready');
+            }
+        }
+
+        document.querySelectorAll('.condition-card').forEach((card) => {
+            const condition = card.dataset.condition;
+            card.classList.toggle('recorded', Boolean(condition && state.trials[condition]));
+        });
     }
 
     function displaySignalQualityFromPlacement() {
@@ -1673,8 +1705,8 @@
         };
 
         state.trialsSaved = Object.keys(state.trials).length;
-        document.getElementById('trial-count').textContent = state.trialsSaved;
         document.getElementById('save-btn').classList.add('hidden');
+        updateRecordingProgressUI();
 
         updateNavButtons();
 

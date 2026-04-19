@@ -7,7 +7,6 @@ import { ExperimentType } from "@/types/domain";
 import { setFlowState } from "@/lib/storage";
 import { AppHeader } from "@/components/app-header";
 import { WorkflowStepper } from "@/components/workflow-stepper";
-import { SideRail } from "@/components/side-rail";
 
 const sectionStyles: Record<string, { icon: string; accent: string; text: string }> = {
   analysis: { icon: "📊", accent: "border-teal-500", text: "text-teal-600" },
@@ -53,8 +52,7 @@ export default function PreTestPage() {
     <>
       <AppHeader />
       <main className="page-shell">
-        <section className="layout-container workspace-grid">
-          <SideRail />
+        <section className="layout-container">
           <div className="workspace-main">
             <section className="section-card">
               <div className="rounded-2xl bg-gradient-to-r from-teal-600 to-blue-500 p-6 text-white shadow-md">

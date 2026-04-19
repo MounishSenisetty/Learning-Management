@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
+import { scryptSync, timingSafeEqual } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { studentLoginSchema } from "@/lib/validation";
 
 function withStudentCode<T extends Record<string, unknown>>(row: T) {
+  const rest = { ...(row as T & { pin_hash?: string | null }) };
+  delete rest.pin_hash;
   return {
-    ...row,
-    student_code: (row.student_code as string | null | undefined) ?? null,
+    ...rest,
+    student_code: ((rest as Record<string, unknown>).student_code as string | null | undefined) ?? null,
   };
 }
 
@@ -17,16 +20,29 @@ function getErrorMessage(error: unknown): string {
   return "Failed to login student";
 }
 
+function verifyPin(pin: string, storedHash: string): boolean {
+  const [salt, expectedHash] = storedHash.split(":");
+  if (!salt || !expectedHash) return false;
+
+  const providedHash = scryptSync(pin, salt, 64).toString("hex");
+  const expectedBuffer = Buffer.from(expectedHash, "hex");
+  const providedBuffer = Buffer.from(providedHash, "hex");
+
+  if (expectedBuffer.length !== providedBuffer.length) return false;
+  return timingSafeEqual(expectedBuffer, providedBuffer);
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const parsed = studentLoginSchema.parse(body);
     const supabase = getSupabaseAdmin();
+    const normalizedRollNumber = parsed.rollNumber.trim().toUpperCase();
 
     const query = supabase
       .from("students")
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
-      .eq("roll_number", parsed.rollNumber)
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin_hash")
+      .eq("roll_number", normalizedRollNumber)
       .limit(1);
 
     const { data, error } = await query;
@@ -34,11 +50,22 @@ export async function POST(request: Request) {
 
     const student = data?.[0] ?? null;
     if (!student) {
-      return NextResponse.json({ error: "No student found with this roll number. Please register first." }, { status: 404 });
+      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
     }
 
-    if (parsed.email && student.email && parsed.email.toLowerCase() !== String(student.email).toLowerCase()) {
-      return NextResponse.json({ error: "Email does not match this roll number." }, { status: 401 });
+    const pinHash = String((student as { pin_hash?: string | null }).pin_hash ?? "");
+    if (!pinHash) {
+      return NextResponse.json(
+        {
+          error: "This account needs PIN setup before login.",
+          code: "LEGACY_PIN_SETUP_REQUIRED",
+        },
+        { status: 428 },
+      );
+    }
+
+    if (!verifyPin(parsed.pin, pinHash)) {
+      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
     }
 
     return NextResponse.json({ student: withStudentCode(student) }, { status: 200 });

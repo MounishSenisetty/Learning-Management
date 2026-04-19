@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomBytes, scryptSync } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { createStudentSchema } from "@/lib/validation";
 
@@ -15,6 +16,12 @@ function withStudentCode<T extends Record<string, unknown>>(row: T) {
     ...row,
     student_code: (row.student_code as string | null | undefined) ?? null,
   };
+}
+
+function hashPin(pin: string): string {
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync(pin, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
 }
 
 export async function GET() {
@@ -38,10 +45,13 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = createStudentSchema.parse(body);
     const supabase = getSupabaseAdmin();
+    const normalizedRollNumber = parsed.rollNumber.trim().toUpperCase();
+    const pinHash = hashPin(parsed.pin);
 
     const payload = {
       full_name: parsed.fullName,
-      roll_number: parsed.rollNumber,
+      roll_number: normalizedRollNumber,
+      pin_hash: pinHash,
       email: parsed.email || null,
       age: parsed.age,
       gender: parsed.gender,
@@ -55,13 +65,13 @@ export async function POST(request: Request) {
     const { data: existing, error: fetchError } = await supabase
       .from("students")
       .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
-      .eq("roll_number", parsed.rollNumber)
+      .eq("roll_number", normalizedRollNumber)
       .maybeSingle();
 
     if (fetchError) throw fetchError;
 
     if (existing) {
-      return NextResponse.json({ student: withStudentCode(existing) }, { status: 200 });
+      return NextResponse.json({ error: "Registration failed. Please verify your details and try again." }, { status: 409 });
     }
 
     const { data, error } = await supabase

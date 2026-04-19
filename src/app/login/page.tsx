@@ -7,10 +7,13 @@ import { getCurrentStaff, getStaffDashboardPath, setCurrentStudent } from "@/lib
 import { AppHeader } from "@/components/app-header";
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const [mode, setMode] = useState<"existing" | "new" | "setup">("existing");
 
   const [fullName, setFullName] = useState("");
   const [rollNumber, setRollNumber] = useState("");
+  const [pin, setPin] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
   const [email, setEmail] = useState("");
   const [age, setAge] = useState(18);
   const [gender, setGender] = useState("prefer_not_to_say");
@@ -42,6 +45,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           fullName,
           rollNumber,
+          pin,
           email,
           age,
           gender,
@@ -77,12 +81,52 @@ export default function LoginPage() {
       const response = await fetch("/api/students/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rollNumber, email }),
+        body: JSON.stringify({ rollNumber, pin }),
       });
 
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
+        if (response.status === 428 && payload.code === "LEGACY_PIN_SETUP_REQUIRED") {
+          setMode("setup");
+          throw new Error("Your account was created before PIN login. Complete PIN setup to continue.");
+        }
         throw new Error(payload.error ?? "Unable to login student");
+      }
+
+      const payload = await response.json();
+      setCurrentStudent(payload.student);
+      router.push("/experiments");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function onSetupPin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (newPin !== confirmPin) {
+        throw new Error("PIN and confirm PIN must match.");
+      }
+
+      const response = await fetch("/api/students/setup-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rollNumber,
+          email,
+          fullName,
+          pin: newPin,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error ?? "Unable to set PIN");
       }
 
       const payload = await response.json();
@@ -140,6 +184,17 @@ export default function LoginPage() {
               </button>
             </div>
 
+            <button
+              type="button"
+              className="mb-5 text-xs font-medium text-teal-700 underline-offset-2 hover:underline"
+              onClick={() => {
+                setMode("setup");
+                setError(null);
+              }}
+            >
+              Existing account without PIN? Set PIN here
+            </button>
+
             {mode === "existing" ? (
               <form onSubmit={onExistingLogin} className="space-y-4">
                 <div>
@@ -154,13 +209,16 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="label">Email (optional)</label>
+                  <label className="label">PIN</label>
                   <input
                     className="w-full rounded-lg border border-slate-300 p-3 outline-none transition focus:ring-2 focus:ring-teal-500"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email (optional)"
+                    required
+                    type="password"
+                    inputMode="numeric"
+                    pattern="\\d{4,8}"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value)}
+                    placeholder="4-8 digit PIN"
                   />
                 </div>
 
@@ -174,7 +232,7 @@ export default function LoginPage() {
                   {loading ? "Please wait..." : "Login"}
                 </button>
               </form>
-            ) : (
+            ) : mode === "new" ? (
               <form onSubmit={onRegister} className="space-y-4">
                 <div>
                   <label className="label">Full Name</label>
@@ -195,6 +253,20 @@ export default function LoginPage() {
                     value={rollNumber}
                     onChange={(e) => setRollNumber(e.target.value)}
                     placeholder="Roll Number"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Create PIN</label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 p-3 outline-none transition focus:ring-2 focus:ring-teal-500"
+                    required
+                    type="password"
+                    inputMode="numeric"
+                    pattern="\\d{4,8}"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value)}
+                    placeholder="Create 4-8 digit PIN"
                   />
                 </div>
 
@@ -295,6 +367,10 @@ export default function LoginPage() {
                   </select>
                 </div>
 
+                <p className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-800">
+                  Roll number must be unique. Use your roll number and PIN together for secure login.
+                </p>
+
                 {error && <p className="text-sm text-red-600">{error}</p>}
 
                 <button
@@ -303,6 +379,82 @@ export default function LoginPage() {
                   type="submit"
                 >
                   {loading ? "Please wait..." : "Register and Continue"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={onSetupPin} className="space-y-4">
+                <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  For accounts created before PIN login. Verify your account and set a new PIN.
+                </p>
+
+                <div>
+                  <label className="label">Roll Number</label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 p-3 outline-none transition focus:ring-2 focus:ring-teal-500"
+                    required
+                    value={rollNumber}
+                    onChange={(e) => setRollNumber(e.target.value)}
+                    placeholder="Roll Number"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Email used in account (preferred)</label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 p-3 outline-none transition focus:ring-2 focus:ring-teal-500"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Full Name (fallback if no email was saved)</label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 p-3 outline-none transition focus:ring-2 focus:ring-teal-500"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Full Name"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">New PIN</label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 p-3 outline-none transition focus:ring-2 focus:ring-teal-500"
+                    required
+                    type="password"
+                    inputMode="numeric"
+                    pattern="\\d{4,8}"
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value)}
+                    placeholder="Create 4-8 digit PIN"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Confirm PIN</label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 p-3 outline-none transition focus:ring-2 focus:ring-teal-500"
+                    required
+                    type="password"
+                    inputMode="numeric"
+                    pattern="\\d{4,8}"
+                    value={confirmPin}
+                    onChange={(e) => setConfirmPin(e.target.value)}
+                    placeholder="Re-enter PIN"
+                  />
+                </div>
+
+                {error && <p className="text-sm text-red-600">{error}</p>}
+
+                <button
+                  className="mt-2 w-full rounded-lg bg-teal-600 py-3 font-medium text-white transition hover:bg-teal-700"
+                  disabled={loading}
+                  type="submit"
+                >
+                  {loading ? "Please wait..." : "Set PIN and Continue"}
                 </button>
               </form>
             )}

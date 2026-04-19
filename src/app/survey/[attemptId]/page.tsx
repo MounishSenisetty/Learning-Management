@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { clearFlowState, getCurrentStudent, getFlowState } from "@/lib/storage";
 import { AppHeader } from "@/components/app-header";
 import { WorkflowStepper } from "@/components/workflow-stepper";
-import { SideRail } from "@/components/side-rail";
 
 const fields = ["understanding", "engagement", "difficulty", "usability", "confidence"] as const;
 
@@ -78,8 +77,7 @@ export default function SurveyPage() {
     <>
       <AppHeader />
       <main className="page-shell">
-        <section className="layout-container workspace-grid">
-          <SideRail />
+        <section className="layout-container">
           <div className="workspace-main">
             <section className="section-card">
               <h1 className="text-4xl font-bold">Post-Experiment Survey</h1>

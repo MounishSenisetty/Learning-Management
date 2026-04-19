@@ -62,13 +62,35 @@ export interface CurrentStaff {
 
 export function setCurrentStudent(student: CurrentStudent) {
   if (!isBrowser()) return;
-  localStorage.setItem(CURRENT_STUDENT_KEY, JSON.stringify(student));
+  // Keep student session tab-scoped so old identities are not reused across new app opens.
+  sessionStorage.setItem(CURRENT_STUDENT_KEY, JSON.stringify(student));
+  localStorage.removeItem(CURRENT_STUDENT_KEY);
+  window.dispatchEvent(new Event("student-session-changed"));
 }
 
 export function getCurrentStudent(): CurrentStudent | null {
   if (!isBrowser()) return null;
-  const raw = localStorage.getItem(CURRENT_STUDENT_KEY);
-  return raw ? JSON.parse(raw) : null;
+  const sessionRaw = sessionStorage.getItem(CURRENT_STUDENT_KEY);
+  if (sessionRaw) {
+    return JSON.parse(sessionRaw);
+  }
+
+  // Legacy fallback for previously persisted student sessions.
+  const legacyRaw = localStorage.getItem(CURRENT_STUDENT_KEY);
+  if (legacyRaw) {
+    sessionStorage.setItem(CURRENT_STUDENT_KEY, legacyRaw);
+    localStorage.removeItem(CURRENT_STUDENT_KEY);
+    return JSON.parse(legacyRaw);
+  }
+
+  return null;
+}
+
+export function clearCurrentStudent() {
+  if (!isBrowser()) return;
+  sessionStorage.removeItem(CURRENT_STUDENT_KEY);
+  localStorage.removeItem(CURRENT_STUDENT_KEY);
+  window.dispatchEvent(new Event("student-session-changed"));
 }
 
 export function setFlowState(state: FlowState) {

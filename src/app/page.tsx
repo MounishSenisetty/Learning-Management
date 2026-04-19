@@ -4,29 +4,134 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/app-header";
 
+interface OverviewResponse {
+  attempts: Array<{
+    student_id: string;
+    time_taken_seconds: number;
+    experiment_type: "EMG" | "ECG";
+    attempt_number: number;
+  }>;
+  summary: {
+    avgGain: number;
+    avgNormalizedGain: number;
+    avgPost: number;
+  };
+  timeImprovements?: Array<{
+    key: string;
+    fromAttempt: number;
+    improvementSeconds: number;
+  }>;
+}
+
+interface HomeMetrics {
+  students: number;
+  attempts: number;
+  gain: number;
+  timeReduction: number;
+  avgPost: number;
+  normGain: number;
+  avgTimeMinutes: number;
+  completion: number;
+}
+
+const initialMetrics: HomeMetrics = {
+  students: 0,
+  attempts: 0,
+  gain: 0,
+  timeReduction: 0,
+  avgPost: 0,
+  normGain: 0,
+  avgTimeMinutes: 0,
+  completion: 0,
+};
+
 export default function HomePage() {
   const [studentsTracked, setStudentsTracked] = useState(0);
   const [attemptsLogged, setAttemptsLogged] = useState(0);
   const [learningGain, setLearningGain] = useState(0);
   const [timeReduction, setTimeReduction] = useState(0);
+  const [metrics, setMetrics] = useState<HomeMetrics>(initialMetrics);
 
   useEffect(() => {
-    const targets = {
-      students: 120,
-      attempts: 356,
-      gain: 35,
-      time: 30,
-    };
+    let cancelled = false;
 
+    async function loadOverview() {
+      try {
+        const response = await fetch("/api/analytics/overview", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Failed to load overview");
+        }
+
+        const payload = (await response.json()) as OverviewResponse;
+        const attempts = payload.attempts ?? [];
+
+        const uniqueStudents = new Set(attempts.map((attempt) => String(attempt.student_id))).size;
+        const avgGain = Math.max(0, Math.round(payload.summary?.avgGain ?? 0));
+        const avgNormalizedGainPct = Math.max(0, Math.round((payload.summary?.avgNormalizedGain ?? 0) * 100));
+        const avgPostScore = Number((payload.summary?.avgPost ?? 0).toFixed(1));
+
+        const attemptTimeLookup = new Map<string, number>();
+        attempts.forEach((attempt) => {
+          attemptTimeLookup.set(`${attempt.student_id}-${attempt.experiment_type}-${attempt.attempt_number}`, Number(attempt.time_taken_seconds ?? 0));
+        });
+
+        const timeReductionRatios = (payload.timeImprovements ?? [])
+          .map((entry) => {
+            const fromKey = `${entry.key}-${entry.fromAttempt}`;
+            const fromSeconds = attemptTimeLookup.get(fromKey) ?? 0;
+            if (fromSeconds <= 0) return 0;
+            return (entry.improvementSeconds / fromSeconds) * 100;
+          })
+          .filter((value) => Number.isFinite(value));
+
+        const avgTimeReductionPct =
+          timeReductionRatios.length > 0
+            ? Math.max(0, Math.round(timeReductionRatios.reduce((sum, value) => sum + value, 0) / timeReductionRatios.length))
+            : 0;
+
+        const avgTimeMinutes =
+          attempts.length > 0
+            ? Number((attempts.reduce((sum, attempt) => sum + Number(attempt.time_taken_seconds ?? 0), 0) / attempts.length / 60).toFixed(1))
+            : 0;
+
+        const completion = attempts.length > 0 ? 100 : 0;
+
+        if (!cancelled) {
+          setMetrics({
+            students: uniqueStudents,
+            attempts: attempts.length,
+            gain: avgGain,
+            timeReduction: avgTimeReductionPct,
+            avgPost: avgPostScore,
+            normGain: Number((avgNormalizedGainPct / 100).toFixed(2)),
+            avgTimeMinutes,
+            completion,
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setMetrics(initialMetrics);
+        }
+      }
+    }
+
+    loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const tick = window.setInterval(() => {
-      setStudentsTracked((value) => Math.min(targets.students, value + Math.max(1, Math.ceil((targets.students - value) / 10))));
-      setAttemptsLogged((value) => Math.min(targets.attempts, value + Math.max(1, Math.ceil((targets.attempts - value) / 10))));
-      setLearningGain((value) => Math.min(targets.gain, value + 1));
-      setTimeReduction((value) => Math.min(targets.time, value + 1));
+      setStudentsTracked((value) => Math.min(metrics.students, value + Math.max(1, Math.ceil((metrics.students - value) / 10))));
+      setAttemptsLogged((value) => Math.min(metrics.attempts, value + Math.max(1, Math.ceil((metrics.attempts - value) / 10))));
+      setLearningGain((value) => Math.min(metrics.gain, value + Math.max(1, Math.ceil((metrics.gain - value) / 6))));
+      setTimeReduction((value) => Math.min(metrics.timeReduction, value + Math.max(1, Math.ceil((metrics.timeReduction - value) / 6))));
     }, 35);
 
     return () => window.clearInterval(tick);
-  }, []);
+  }, [metrics]);
 
   useEffect(() => {
     const revealNodes = document.querySelectorAll<HTMLElement>("[data-reveal]");
@@ -68,12 +173,6 @@ export default function HomePage() {
                 </p>
 
                 <div className="mt-8 flex flex-wrap gap-4">
-                  <Link
-                    href="/experiments"
-                    className="rounded-xl bg-gradient-to-r from-teal-500 to-blue-500 px-6 py-3 font-semibold text-white shadow-lg transition duration-300 hover:scale-[1.03] hover:shadow-xl"
-                  >
-                    Try Live Demo →
-                  </Link>
                   <Link href="/dashboard" className="rounded-xl border border-slate-300 bg-white px-6 py-3 font-medium transition hover:bg-slate-50">
                     View Analytics
                   </Link>
@@ -126,7 +225,7 @@ export default function HomePage() {
             </div>
             <div className="metric-card lively-card text-center">
               <p className="text-xs uppercase tracking-wide text-slate-500">Assessment Completion</p>
-              <p className="mt-2 text-3xl font-bold text-indigo-600">95%</p>
+              <p className="mt-2 text-3xl font-bold text-indigo-600">{metrics.completion}%</p>
             </div>
           </section>
 
@@ -188,15 +287,15 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="metric-card transition duration-300 hover:scale-[1.02] hover:shadow-xl">
                 <p className="text-xs uppercase tracking-wide text-slate-500">Avg Post-test Score</p>
-                <p className="mt-2 text-3xl font-bold text-teal-600">84.2</p>
+                <p className="mt-2 text-3xl font-bold text-teal-600">{metrics.avgPost}</p>
               </div>
               <div className="metric-card transition duration-300 hover:scale-[1.02] hover:shadow-xl">
                 <p className="text-xs uppercase tracking-wide text-slate-500">Normalized Gain</p>
-                <p className="mt-2 text-3xl font-bold text-cyan-600">0.41</p>
+                <p className="mt-2 text-3xl font-bold text-cyan-600">{metrics.normGain}</p>
               </div>
               <div className="metric-card transition duration-300 hover:scale-[1.02] hover:shadow-xl">
                 <p className="text-xs uppercase tracking-wide text-slate-500">Avg Completion Time</p>
-                <p className="mt-2 text-3xl font-bold text-blue-600">12m</p>
+                <p className="mt-2 text-3xl font-bold text-blue-600">{metrics.avgTimeMinutes}m</p>
               </div>
             </div>
           </section>

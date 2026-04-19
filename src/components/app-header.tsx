@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSyncExternalStore } from "react";
-import { clearCurrentStaff, getCurrentStaff } from "@/lib/storage";
+import { clearCurrentStaff, clearCurrentStudent, getCurrentStaff, getCurrentStudent } from "@/lib/storage";
 
 const studentLinks = [
   { href: "/", label: "Home" },
@@ -17,7 +17,8 @@ const studentLinks = [
 export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const staffRole = useSyncExternalStore(subscribeStaffRole, getStaffRoleSnapshot, getServerStaffRoleSnapshot);
+  const staffRole = useSyncExternalStore(subscribeSession, getStaffRoleSnapshot, getServerStaffRoleSnapshot);
+  const hasStudent = useSyncExternalStore(subscribeSession, getHasStudentSnapshot, getServerHasStudentSnapshot);
 
   const links =
     staffRole === "teacher"
@@ -37,6 +38,11 @@ export function AppHeader() {
     const role = getCurrentStaff()?.role ?? null;
     clearCurrentStaff();
     router.push(role === "admin" ? "/admin-login" : "/teacher-login");
+  }
+
+  function onStudentLogout() {
+    clearCurrentStudent();
+    router.push("/login");
   }
 
   return (
@@ -83,6 +89,19 @@ export function AppHeader() {
                 Logout
               </button>
             </>
+          ) : hasStudent ? (
+            <>
+              <Link href="/dashboard" className="hidden text-sm text-slate-600 transition hover:text-teal-600 sm:inline">
+                Dashboard
+              </Link>
+              <button
+                type="button"
+                onClick={onStudentLogout}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Logout
+              </button>
+            </>
           ) : (
             <>
               <Link href="/login" className="hidden text-sm text-slate-600 transition hover:text-teal-600 sm:inline">
@@ -95,11 +114,28 @@ export function AppHeader() {
           )}
         </div>
       </div>
+
+      <nav className="flex items-center gap-2 overflow-x-auto border-t border-slate-200/70 px-4 py-2 md:hidden">
+        {links.map((link) => {
+          const active = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href));
+          return (
+            <Link
+              key={`mobile-${link.href}`}
+              href={link.href}
+              className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition ${
+                active ? "border-teal-600 bg-teal-50 text-teal-700" : "border-slate-200 bg-white text-slate-600 hover:border-teal-300"
+              }`}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
+      </nav>
     </header>
   );
 }
 
-function subscribeStaffRole(onStoreChange: () => void) {
+function subscribeSession(onStoreChange: () => void) {
   if (typeof window === "undefined") {
     return () => {};
   }
@@ -107,10 +143,12 @@ function subscribeStaffRole(onStoreChange: () => void) {
   const handler = () => onStoreChange();
   window.addEventListener("storage", handler);
   window.addEventListener("staff-session-changed", handler);
+  window.addEventListener("student-session-changed", handler);
 
   return () => {
     window.removeEventListener("storage", handler);
     window.removeEventListener("staff-session-changed", handler);
+    window.removeEventListener("student-session-changed", handler);
   };
 }
 
@@ -120,4 +158,12 @@ function getStaffRoleSnapshot() {
 
 function getServerStaffRoleSnapshot() {
   return null;
+}
+
+function getHasStudentSnapshot() {
+  return Boolean(getCurrentStudent()?.id);
+}
+
+function getServerHasStudentSnapshot() {
+  return false;
 }

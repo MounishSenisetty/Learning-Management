@@ -1,21 +1,29 @@
 import { z } from "zod";
 
 export const createStudentSchema = z.object({
-  fullName: z.string().min(2).max(120),
-  rollNumber: z.string().min(2).max(40),
+  fullName: z.string().trim().min(2).max(120),
+  rollNumber: z.string().trim().min(2).max(40),
+  pin: z.string().regex(/^\d{4,8}$/, "PIN must be 4 to 8 digits"),
   email: z.string().email().optional().or(z.literal("")),
   age: z.number().int().min(10).max(100),
   gender: z.enum(["male", "female", "other", "prefer_not_to_say"]),
-  program: z.string().min(2).max(120),
+  program: z.string().trim().min(2).max(120),
   yearOfStudy: z.number().int().min(1).max(12),
-  institution: z.string().max(160).optional().or(z.literal("")),
+  institution: z.string().trim().max(160).optional().or(z.literal("")),
   priorLabExperience: z.boolean(),
-  cohort: z.string().max(80).optional().or(z.literal("")),
+  cohort: z.string().trim().max(80).optional().or(z.literal("")),
 });
 
 export const studentLoginSchema = z.object({
-  rollNumber: z.string().min(2).max(40),
+  rollNumber: z.string().trim().min(2).max(40),
+  pin: z.string().regex(/^\d{4,8}$/, "PIN must be 4 to 8 digits"),
+});
+
+export const legacyPinSetupSchema = z.object({
+  rollNumber: z.string().trim().min(2).max(40),
   email: z.string().email().optional().or(z.literal("")),
+  fullName: z.string().trim().min(2).max(120).optional().or(z.literal("")),
+  pin: z.string().regex(/^\d{4,8}$/, "PIN must be 4 to 8 digits"),
 });
 
 export const surveySchema = z.object({
