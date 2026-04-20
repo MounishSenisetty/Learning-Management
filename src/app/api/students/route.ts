@@ -24,6 +24,10 @@ function hashPin(pin: string): string {
   return `${salt}:${hash}`;
 }
 
+function generateStudentCode(id: string): string {
+  return "STU-" + id.replace(/-/g, "").substring(0, 8).toUpperCase();
+}
+
 export async function GET() {
   try {
     const supabase = getSupabaseAdmin();
@@ -78,12 +82,26 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("students")
       .insert(payload)
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, student_code")
       .single();
 
     if (error) throw error;
 
-    return NextResponse.json({ student: withStudentCode(data) }, { status: 201 });
+    // Generate and update student_code if not set
+    if (!data.student_code) {
+      const studentCode = generateStudentCode(data.id);
+      const { data: updated, error: updateError } = await supabase
+        .from("students")
+        .update({ student_code: studentCode })
+        .eq("id", data.id)
+        .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, student_code")
+        .single();
+
+      if (updateError) throw updateError;
+      return NextResponse.json({ student: updated }, { status: 201 });
+    }
+
+    return NextResponse.json({ student: data }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 400 });
   }
