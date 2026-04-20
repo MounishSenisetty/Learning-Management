@@ -14,7 +14,9 @@ export default function ExperimentsPage() {
   const student = useSyncExternalStore(subscribeSession, getStudentSnapshot, getServerStudentSnapshot);
   const hasStudent = Boolean(student?.id);
   const isGuest = !staffRole && !hasStudent;
-  const studentName = student?.full_name ?? "Student";
+  
+  // Ensure studentName is a string
+  const studentName = typeof student?.full_name === "string" ? student.full_name : "Student";
 
   function chooseExperiment(type: ExperimentType) {
     if (!hasStudent) {
