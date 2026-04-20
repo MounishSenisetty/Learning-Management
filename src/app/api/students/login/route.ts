@@ -3,13 +3,10 @@ import { scryptSync, timingSafeEqual } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { studentLoginSchema } from "@/lib/validation";
 
-function withStudentCode<T extends Record<string, unknown>>(row: T) {
+function withoutPin<T extends Record<string, unknown>>(row: T): Omit<T, "pin"> {
   const rest = { ...(row as T & { pin?: string | null }) };
   delete rest.pin;
-  return {
-    ...rest,
-    student_code: ((rest as Record<string, unknown>).student_code as string | null | undefined) ?? null,
-  };
+  return rest as Omit<T, "pin">;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -41,7 +38,7 @@ export async function POST(request: Request) {
 
     const query = supabase
       .from("students")
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, student_code, pin")
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin")
       .eq("roll_number", normalizedRollNumber)
       .limit(1);
 
@@ -69,7 +66,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
     }
 
-    return NextResponse.json({ student: withStudentCode(student) }, { status: 200 });
+    return NextResponse.json({ student: withoutPin(student) }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 400 });
   }

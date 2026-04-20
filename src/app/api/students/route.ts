@@ -11,21 +11,10 @@ function getErrorMessage(error: unknown): string {
   return "Failed to create student";
 }
 
-function withStudentCode<T extends Record<string, unknown>>(row: T) {
-  return {
-    ...row,
-    student_code: (row.student_code as string | null | undefined) ?? null,
-  };
-}
-
 function hashPin(pin: string): string {
   const salt = randomBytes(16).toString("hex");
   const hash = scryptSync(pin, salt, 64).toString("hex");
   return `${salt}:${hash}`;
-}
-
-function generateStudentCode(id: string): string {
-  return "STU-" + id.replace(/-/g, "").substring(0, 8).toUpperCase();
 }
 
 export async function GET() {
@@ -82,24 +71,10 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("students")
       .insert(payload)
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, student_code")
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
       .single();
 
     if (error) throw error;
-
-    // Generate and update student_code if not set
-    if (!data.student_code) {
-      const studentCode = generateStudentCode(data.id);
-      const { data: updated, error: updateError } = await supabase
-        .from("students")
-        .update({ student_code: studentCode })
-        .eq("id", data.id)
-        .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, student_code")
-        .single();
-
-      if (updateError) throw updateError;
-      return NextResponse.json({ student: updated }, { status: 201 });
-    }
 
     return NextResponse.json({ student: data }, { status: 201 });
   } catch (error) {
