@@ -3,9 +3,8 @@ create extension if not exists pgcrypto;
 create table if not exists students (
   id uuid primary key default gen_random_uuid(),
   student_code text unique,
-  roll_number text unique not null,
+  roll_number text not null,
   pin text,
-  pin_hash text,
   full_name text not null,
   email text unique,
   age integer check (age between 10 and 100),
@@ -27,7 +26,9 @@ alter table students add column if not exists prior_lab_experience boolean;
 alter table students add column if not exists cohort text;
 alter table students add column if not exists student_code text;
 alter table students add column if not exists pin text;
-alter table students add column if not exists pin_hash text;
+
+-- Create unique constraint on (roll_number, pin)
+alter table students add constraint if not exists uq_roll_number_pin unique (roll_number, pin);
 
 update students
 set student_code = 'STU-' || upper(substring(replace(id::text, '-', '') from 1 for 8))

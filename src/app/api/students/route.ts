@@ -52,7 +52,6 @@ export async function POST(request: Request) {
       full_name: parsed.fullName,
       roll_number: normalizedRollNumber,
       pin: pinHash,
-      pin_hash: pinHash,
       email: parsed.email || null,
       age: parsed.age,
       gender: parsed.gender,
