@@ -51,7 +51,6 @@ export async function POST(request: Request) {
     const payload = {
       full_name: parsed.fullName,
       roll_number: normalizedRollNumber,
-      pin: pinHash,
       pin_hash: pinHash,
       email: parsed.email || null,
       age: parsed.age,
