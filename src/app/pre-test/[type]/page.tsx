@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getQuestions, scoreAnswers } from "@/lib/questions";
+import { fetchQuestions, getDefaultQuestions, scoreAnswers, type Question } from "@/lib/questions";
 import { ExperimentType } from "@/types/domain";
 import { setFlowState } from "@/lib/storage";
 import { AppHeader } from "@/components/app-header";
@@ -20,15 +20,45 @@ export default function PreTestPage() {
   const params = useParams<{ type: string }>();
   const router = useRouter();
   const type = (params.type || "ECG").toUpperCase() as ExperimentType;
-  const questions = useMemo(() => getQuestions(type), [type]);
-  const [answers, setAnswers] = useState<number[]>(Array.from({ length: questions.length }, () => -1));
+  const defaultQuestions = useMemo(() => getDefaultQuestions(type, "pre-test"), [type]);
+  const [questions, setQuestions] = useState<Question[]>(defaultQuestions);
+  const [answersByQuestionId, setAnswersByQuestionId] = useState<Record<string, number>>({});
+  const [loadedType, setLoadedType] = useState<ExperimentType | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const allAnswered = answers.every((answer) => answer >= 0);
+  const activeQuestions = loadedType === type ? questions : defaultQuestions;
+  const answers = activeQuestions.map((question) => answersByQuestionId[question.id] ?? -1);
+  const isLoadingQuestions = loadedType !== type;
+  const allAnswered = activeQuestions.length > 0 && answers.every((answer) => answer >= 0);
   const answeredCount = answers.filter((answer) => answer >= 0).length;
-  const progressPercent = Math.round((answeredCount / Math.max(1, questions.length)) * 100);
-  const activeQuestion = Math.min(questions.length, answers.findIndex((answer) => answer < 0) + 1 || questions.length);
+  const progressPercent = Math.round((answeredCount / Math.max(1, activeQuestions.length)) * 100);
+  const activeQuestion = Math.min(activeQuestions.length, answers.findIndex((answer) => answer < 0) + 1 || activeQuestions.length);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchQuestions(type, "pre-test")
+      .then((nextQuestions) => {
+        if (cancelled) return;
+        setQuestions(nextQuestions);
+        setLoadedType(type);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setQuestions(defaultQuestions);
+        setLoadedType(type);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [defaultQuestions, type]);
 
   function submitTest() {
+    if (isLoadingQuestions) {
+      setError("Questions are still loading. Please wait a moment.");
+      return;
+    }
+
     if (!allAnswered) {
       setError("Please answer all pre-test questions before continuing.");
       const firstUnanswered = answers.findIndex((answer) => answer < 0);
@@ -39,7 +69,7 @@ export default function PreTestPage() {
       return;
     }
 
-    const preTestScore = scoreAnswers(questions, answers);
+    const preTestScore = scoreAnswers(activeQuestions, answers);
     setFlowState({
       experimentType: type,
       preTestScore,
@@ -68,13 +98,14 @@ export default function PreTestPage() {
 
               <WorkflowStepper activeStep={1} />
               <p className="mt-4 text-sm text-slate-500">This section evaluates your baseline understanding of {type} signal interpretation and procedure flow.</p>
+              {isLoadingQuestions && <p className="mt-3 text-sm text-slate-500">Refreshing latest pre-test questions...</p>}
               <div className="mb-4 mt-6 flex items-center justify-between rounded-xl border border-slate-200 bg-white/80 p-3">
-                <p className="text-sm text-slate-500">Question {activeQuestion} of {questions.length}</p>
+                <p className="text-sm text-slate-500">Question {activeQuestion} of {activeQuestions.length}</p>
                 <p className="text-sm font-medium text-teal-600">{progressPercent}% Complete</p>
               </div>
 
               <div className="mt-6 max-w-4xl space-y-5">
-          {questions.map((q, idx) => (
+          {activeQuestions.map((q, idx) => (
             <div
               key={q.id}
               id={`pretest-question-${idx}`}
@@ -98,11 +129,12 @@ export default function PreTestPage() {
                       name={`${q.id}`}
                       value={optionIdx}
                       className="h-4 w-4 scale-110 accent-teal-600"
-                      checked={answers[idx] === optionIdx}
+                      checked={answersByQuestionId[q.id] === optionIdx}
                       onChange={() => {
-                        const next = [...answers];
-                        next[idx] = optionIdx;
-                        setAnswers(next);
+                        setAnswersByQuestionId((current) => ({
+                          ...current,
+                          [q.id]: optionIdx,
+                        }));
                         setError(null);
                       }}
                     />
@@ -118,7 +150,7 @@ export default function PreTestPage() {
 
               <div className="sticky bottom-4 mt-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4 shadow-lg">
                 <p className="text-sm text-slate-500">{answeredCount} questions answered</p>
-                <button className="btn btn-primary px-6 py-2 text-base" onClick={submitTest}>
+                <button className="btn btn-primary px-6 py-2 text-base" onClick={submitTest} disabled={!allAnswered || isLoadingQuestions}>
                   Continue to Simulation &rarr;
                 </button>
               </div>

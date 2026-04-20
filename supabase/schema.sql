@@ -181,3 +181,15 @@ select
 from attempts a
 join students s on s.id = a.student_id
 join experiments e on e.id = a.experiment_id;
+
+create table if not exists question_banks (
+  id uuid primary key default gen_random_uuid(),
+  experiment_type text not null check (experiment_type in ('EMG', 'ECG')),
+  module text not null check (module in ('pre-test', 'post-test')),
+  questions jsonb not null,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  unique (experiment_type, module)
+);
+
+create index if not exists idx_question_banks_experiment_module on question_banks(experiment_type, module);

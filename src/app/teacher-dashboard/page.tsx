@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { SideRail } from "@/components/side-rail";
 import { StudentAnalyticsExplorer } from "@/components/student-analytics-explorer";
 import { clearCurrentStaff, getCurrentStaff } from "@/lib/storage";
 import { buildStudentPerformanceSummaries } from "@/lib/staff-analytics";
@@ -97,10 +95,8 @@ export default function TeacherDashboardPage() {
     <>
       <AppHeader />
       <main className="page-shell">
-        <section className="layout-container workspace-grid">
-          <SideRail />
-
-          <div className="workspace-main">
+        <section className="layout-container">
+          <div className="space-y-6">
             <section className="section-card">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>

@@ -166,10 +166,10 @@ export default function AdminDashboardPage() {
               <Link href="/experiments" className="side-card transition hover:shadow-md">
                 Experiment Launcher
               </Link>
-              <Link href="/pre-test/ECG" className="side-card transition hover:shadow-md">
+              <Link href="/admin-dashboard/questions?module=pre-test&type=ECG" className="side-card transition hover:shadow-md">
                 Pre-test Module
               </Link>
-              <Link href="/post-test/ECG" className="side-card transition hover:shadow-md">
+              <Link href="/admin-dashboard/questions?module=post-test&type=ECG" className="side-card transition hover:shadow-md">
                 Post-test Module
               </Link>
               <Link href="/" className="side-card transition hover:shadow-md">

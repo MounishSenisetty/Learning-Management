@@ -9,6 +9,8 @@ export interface Question {
   hint?: string;
 }
 
+export type AssessmentModule = "pre-test" | "post-test";
+
 const commonQuestions: Record<ExperimentType, Question[]> = {
   ECG: [
     {
@@ -94,6 +96,20 @@ const commonQuestions: Record<ExperimentType, Question[]> = {
       answerIndex: 2,
     },
   ],
+};
+
+const defaultAssessmentQuestions: Record<AssessmentModule, Record<ExperimentType, Question[]>> = {
+  "pre-test": commonQuestions,
+  "post-test": {
+    ECG: commonQuestions.ECG.map((question) => ({
+      ...question,
+      options: [...question.options],
+    })),
+    EMG: commonQuestions.EMG.map((question) => ({
+      ...question,
+      options: [...question.options],
+    })),
+  },
 };
 
 const sectionCheckpointQuestions: Record<ExperimentType, Question[]> = {
@@ -183,12 +199,52 @@ const sectionCheckpointQuestions: Record<ExperimentType, Question[]> = {
   ],
 };
 
-export function getQuestions(type: ExperimentType): Question[] {
-  return commonQuestions[type];
+function cloneQuestions(questions: Question[]): Question[] {
+  return questions.map((question) => ({
+    ...question,
+    options: [...question.options],
+  }));
+}
+
+export function getDefaultQuestions(type: ExperimentType, module: AssessmentModule = "pre-test"): Question[] {
+  return cloneQuestions(defaultAssessmentQuestions[module][type]);
+}
+
+export function getQuestions(type: ExperimentType, module: AssessmentModule = "pre-test"): Question[] {
+  return getDefaultQuestions(type, module);
 }
 
 export function getSectionCheckpointQuestions(type: ExperimentType): Question[] {
-  return sectionCheckpointQuestions[type];
+  return cloneQuestions(sectionCheckpointQuestions[type]);
+}
+
+interface QuestionsResponse {
+  questions?: Question[];
+}
+
+export async function fetchQuestions(type: ExperimentType, module: AssessmentModule): Promise<Question[]> {
+  const fallback = getDefaultQuestions(type, module);
+
+  try {
+    const params = new URLSearchParams({ experimentType: type, module });
+    const response = await fetch(`/api/questions?${params.toString()}`, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return fallback;
+    }
+
+    const payload = (await response.json()) as QuestionsResponse;
+    if (!Array.isArray(payload.questions) || payload.questions.length === 0) {
+      return fallback;
+    }
+
+    return cloneQuestions(payload.questions);
+  } catch {
+    return fallback;
+  }
 }
 
 export function scoreAnswers(questions: Question[], answers: number[]): number {
