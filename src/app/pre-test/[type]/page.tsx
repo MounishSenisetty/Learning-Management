@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchQuestions, getDefaultQuestions, scoreAnswers, type Question } from "@/lib/questions";
 import { ExperimentType } from "@/types/domain";
-import { setFlowState } from "@/lib/storage";
+import { getCurrentStaff, getCurrentStudent, setFlowState } from "@/lib/storage";
 import { AppHeader } from "@/components/app-header";
 import { WorkflowStepper } from "@/components/workflow-stepper";
 
@@ -32,6 +32,15 @@ export default function PreTestPage() {
   const answeredCount = answers.filter((answer) => answer >= 0).length;
   const progressPercent = Math.round((answeredCount / Math.max(1, activeQuestions.length)) * 100);
   const activeQuestion = Math.min(activeQuestions.length, answers.findIndex((answer) => answer < 0) + 1 || activeQuestions.length);
+
+  useEffect(() => {
+    const hasStudent = Boolean(getCurrentStudent()?.id);
+    const hasStaff = Boolean(getCurrentStaff()?.role);
+
+    if (!hasStudent && !hasStaff) {
+      router.replace("/login");
+    }
+  }, [router]);
 
   useEffect(() => {
     let cancelled = false;
