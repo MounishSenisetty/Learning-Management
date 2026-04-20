@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from("students")
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin_hash")
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin, pin_hash")
       .eq("roll_number", normalizedRollNumber)
       .maybeSingle();
 
@@ -47,8 +47,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unable to verify account for PIN setup." }, { status: 401 });
     }
 
-    const studentRecord = data as { pin_hash?: string | null };
-    if (studentRecord.pin_hash) {
+    const studentRecord = data as { pin?: string | null; pin_hash?: string | null };
+    if (studentRecord.pin_hash || studentRecord.pin) {
       return NextResponse.json({ error: "PIN already exists for this account. Please login." }, { status: 409 });
     }
 
@@ -69,9 +69,9 @@ export async function POST(request: Request) {
 
     const { data: updated, error: updateError } = await supabase
       .from("students")
-      .update({ pin_hash: pinHash })
+      .update({ pin: pinHash, pin_hash: pinHash })
       .eq("id", data.id)
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin_hash")
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin, pin_hash")
       .single();
 
     if (updateError) throw updateError;
