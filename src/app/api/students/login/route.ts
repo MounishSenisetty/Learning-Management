@@ -4,8 +4,8 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { studentLoginSchema } from "@/lib/validation";
 
 function withStudentCode<T extends Record<string, unknown>>(row: T) {
-  const rest = { ...(row as T & { pin_hash?: string | null }) };
-  delete rest.pin_hash;
+  const rest = { ...(row as T & { pin?: string | null }) };
+  delete rest.pin;
   return {
     ...rest,
     student_code: ((rest as Record<string, unknown>).student_code as string | null | undefined) ?? null,
