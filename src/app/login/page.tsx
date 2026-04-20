@@ -68,6 +68,9 @@ export default function LoginPage() {
       }
 
       const payload = await response.json();
+      if (!payload.student || typeof payload.student !== "object" || !payload.student.id) {
+        throw new Error("Invalid student data received from server");
+      }
       setCurrentStudent(payload.student);
       router.push("/experiments");
     } catch (e) {
@@ -103,6 +106,9 @@ export default function LoginPage() {
       }
 
       const payload = await response.json();
+      if (!payload.student || typeof payload.student !== "object" || !payload.student.id) {
+        throw new Error("Invalid student data received from server");
+      }
       setCurrentStudent(payload.student);
       router.push("/experiments");
     } catch (e) {
@@ -147,6 +153,9 @@ export default function LoginPage() {
       }
 
       const payload = await response.json();
+      if (!payload.student || typeof payload.student !== "object" || !payload.student.id) {
+        throw new Error("Invalid student data received from server");
+      }
       setCurrentStudent(payload.student);
       router.push("/experiments");
     } catch (e) {
