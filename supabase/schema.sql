@@ -27,6 +27,9 @@ alter table students add column if not exists cohort text;
 alter table students add column if not exists student_code text;
 alter table students add column if not exists pin text;
 
+-- Drop old unique index on roll_number to allow multiple entries with same roll_number but different PIN
+drop index if exists idx_roll_number_not_null;
+
 -- Create unique constraint on (roll_number, pin)
 alter table students add constraint if not exists uq_roll_number_pin unique (roll_number, pin);
 
