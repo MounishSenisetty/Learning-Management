@@ -64,14 +64,15 @@ export async function POST(request: Request) {
 
     const { data: existing, error: fetchError } = await supabase
       .from("students")
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort")
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin")
       .eq("roll_number", normalizedRollNumber)
+      .eq("pin", pinHash)
       .maybeSingle();
 
     if (fetchError) throw fetchError;
 
     if (existing) {
-      return NextResponse.json({ error: "Registration failed. Please verify your details and try again." }, { status: 409 });
+      return NextResponse.json({ error: "This roll number and PIN combination already exists. Please use a different PIN or verify your details." }, { status: 409 });
     }
 
     const { data, error } = await supabase
