@@ -86,7 +86,31 @@ export function getCurrentStudent(): CurrentStudent | null {
   }
 
   try {
-    return JSON.parse(sessionRaw);
+    const parsed = JSON.parse(sessionRaw) as Partial<CurrentStudent> | null;
+    if (!parsed || typeof parsed !== "object") {
+      clearCurrentStudent();
+      return null;
+    }
+
+    if (typeof parsed.id !== "string" || typeof parsed.roll_number !== "string" || typeof parsed.full_name !== "string") {
+      clearCurrentStudent();
+      return null;
+    }
+
+    return {
+      id: parsed.id,
+      roll_number: parsed.roll_number,
+      full_name: parsed.full_name,
+      student_code: typeof parsed.student_code === "string" ? parsed.student_code : null,
+      email: typeof parsed.email === "string" ? parsed.email : null,
+      age: typeof parsed.age === "number" ? parsed.age : null,
+      gender: typeof parsed.gender === "string" ? parsed.gender : null,
+      program: typeof parsed.program === "string" ? parsed.program : null,
+      year_of_study: typeof parsed.year_of_study === "number" ? parsed.year_of_study : null,
+      institution: typeof parsed.institution === "string" ? parsed.institution : null,
+      prior_lab_experience: typeof parsed.prior_lab_experience === "boolean" ? parsed.prior_lab_experience : null,
+      cohort: typeof parsed.cohort === "string" ? parsed.cohort : null,
+    };
   } catch {
     // Corrupted or invalid session payload should not keep the user logged in.
     clearCurrentStudent();
@@ -127,7 +151,23 @@ export function setCurrentStaff(staff: CurrentStaff) {
 export function getCurrentStaff(): CurrentStaff | null {
   if (!isBrowser()) return null;
   const raw = localStorage.getItem(CURRENT_STAFF_KEY);
-  return raw ? JSON.parse(raw) : null;
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<CurrentStaff> | null;
+    const role = parsed?.role;
+    const username = parsed?.username;
+
+    if ((role !== "teacher" && role !== "admin") || typeof username !== "string") {
+      clearCurrentStaff();
+      return null;
+    }
+
+    return { role, username };
+  } catch {
+    clearCurrentStaff();
+    return null;
+  }
 }
 
 export function clearCurrentStaff() {

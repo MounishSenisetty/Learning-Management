@@ -11,12 +11,9 @@ import { SideRail } from "@/components/side-rail";
 export default function ExperimentsPage() {
   const router = useRouter();
   const staffRole = useSyncExternalStore(subscribeSession, getStaffRoleSnapshot, getServerStaffRoleSnapshot);
-  const student = useSyncExternalStore(subscribeSession, getStudentSnapshot, getServerStudentSnapshot);
-  const hasStudent = Boolean(student?.id);
+  const hasStudent = useSyncExternalStore(subscribeSession, getHasStudentSnapshot, getServerHasStudentSnapshot);
+  const studentName = useSyncExternalStore(subscribeSession, getStudentNameSnapshot, getServerStudentNameSnapshot);
   const isGuest = !staffRole && !hasStudent;
-  
-  // Ensure studentName is a string
-  const studentName = typeof student?.full_name === "string" ? student.full_name : "Student";
 
   function chooseExperiment(type: ExperimentType) {
     if (!hasStudent) {
@@ -140,10 +137,19 @@ function getServerStaffRoleSnapshot() {
   return null;
 }
 
-function getStudentSnapshot() {
-  return getCurrentStudent();
+function getHasStudentSnapshot() {
+  return Boolean(getCurrentStudent()?.id);
 }
 
-function getServerStudentSnapshot() {
-  return null;
+function getServerHasStudentSnapshot() {
+  return false;
+}
+
+function getStudentNameSnapshot() {
+  const fullName = getCurrentStudent()?.full_name;
+  return typeof fullName === "string" && fullName.trim() ? fullName : "Student";
+}
+
+function getServerStudentNameSnapshot() {
+  return "Student";
 }
