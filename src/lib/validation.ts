@@ -1,9 +1,12 @@
 import { z } from "zod";
+import { PIN_PATTERN } from "./pin";
+
+const pinSchema = z.string().trim().regex(PIN_PATTERN, "PIN must be 4 to 8 digits");
 
 export const createStudentSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   rollNumber: z.string().trim().min(2).max(40),
-  pin: z.string().regex(/^\d{4,8}$/, "PIN must be 4 to 8 digits"),
+  pin: pinSchema,
   email: z.string().email().optional().or(z.literal("")),
   age: z.number().int().min(10).max(100),
   gender: z.enum(["male", "female", "other", "prefer_not_to_say"]),
@@ -16,14 +19,14 @@ export const createStudentSchema = z.object({
 
 export const studentLoginSchema = z.object({
   rollNumber: z.string().trim().min(2).max(40),
-  pin: z.string().regex(/^\d{4,8}$/, "PIN must be 4 to 8 digits"),
+  pin: pinSchema,
 });
 
 export const legacyPinSetupSchema = z.object({
   rollNumber: z.string().trim().min(2).max(40),
   email: z.string().email().optional().or(z.literal("")),
   fullName: z.string().trim().min(2).max(120).optional().or(z.literal("")),
-  pin: z.string().regex(/^\d{4,8}$/, "PIN must be 4 to 8 digits"),
+  pin: pinSchema,
 });
 
 export const surveySchema = z.object({

@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     const query = supabase
       .from("students")
-      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin_hash")
+      .select("id, full_name, roll_number, email, age, gender, program, year_of_study, institution, prior_lab_experience, cohort, pin, pin_hash")
       .eq("roll_number", normalizedRollNumber)
       .limit(1);
 
@@ -53,7 +53,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
     }
 
-    const pinHash = String((student as { pin_hash?: string | null }).pin_hash ?? "");
+    const studentRecord = student as { pin?: string | null; pin_hash?: string | null };
+    const pinHash = String(studentRecord.pin_hash ?? studentRecord.pin ?? "");
     if (!pinHash) {
       return NextResponse.json(
         {

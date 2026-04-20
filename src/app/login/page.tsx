@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getCurrentStaff, getStaffDashboardPath, setCurrentStudent } from "@/lib/storage";
 import { AppHeader } from "@/components/app-header";
+import { isValidPin, normalizePinInput } from "@/lib/pin";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"existing" | "new" | "setup">("existing");
@@ -39,6 +40,10 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      if (!isValidPin(pin)) {
+        throw new Error("PIN must be 4 to 8 digits.");
+      }
+
       const response = await fetch("/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,6 +83,10 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      if (!isValidPin(pin)) {
+        throw new Error("PIN must be 4 to 8 digits.");
+      }
+
       const response = await fetch("/api/students/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -109,6 +118,14 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      if (!isValidPin(newPin)) {
+        throw new Error("New PIN must be 4 to 8 digits.");
+      }
+
+      if (!isValidPin(confirmPin)) {
+        throw new Error("Confirm PIN must be 4 to 8 digits.");
+      }
+
       if (newPin !== confirmPin) {
         throw new Error("PIN and confirm PIN must match.");
       }
@@ -215,9 +232,11 @@ export default function LoginPage() {
                     required
                     type="password"
                     inputMode="numeric"
-                    pattern="\\d{4,8}"
+                    minLength={4}
+                    maxLength={8}
+                    autoComplete="one-time-code"
                     value={pin}
-                    onChange={(e) => setPin(e.target.value)}
+                    onChange={(e) => setPin(normalizePinInput(e.target.value))}
                     placeholder="4-8 digit PIN"
                   />
                 </div>
@@ -263,9 +282,11 @@ export default function LoginPage() {
                     required
                     type="password"
                     inputMode="numeric"
-                    pattern="\\d{4,8}"
+                    minLength={4}
+                    maxLength={8}
+                    autoComplete="one-time-code"
                     value={pin}
-                    onChange={(e) => setPin(e.target.value)}
+                    onChange={(e) => setPin(normalizePinInput(e.target.value))}
                     placeholder="Create 4-8 digit PIN"
                   />
                 </div>
@@ -426,9 +447,11 @@ export default function LoginPage() {
                     required
                     type="password"
                     inputMode="numeric"
-                    pattern="\\d{4,8}"
+                    minLength={4}
+                    maxLength={8}
+                    autoComplete="one-time-code"
                     value={newPin}
-                    onChange={(e) => setNewPin(e.target.value)}
+                    onChange={(e) => setNewPin(normalizePinInput(e.target.value))}
                     placeholder="Create 4-8 digit PIN"
                   />
                 </div>
@@ -440,9 +463,11 @@ export default function LoginPage() {
                     required
                     type="password"
                     inputMode="numeric"
-                    pattern="\\d{4,8}"
+                    minLength={4}
+                    maxLength={8}
+                    autoComplete="one-time-code"
                     value={confirmPin}
-                    onChange={(e) => setConfirmPin(e.target.value)}
+                    onChange={(e) => setConfirmPin(normalizePinInput(e.target.value))}
                     placeholder="Re-enter PIN"
                   />
                 </div>
