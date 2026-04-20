@@ -27,7 +27,7 @@ export async function GET() {
 
     if (error) throw error;
 
-    return NextResponse.json({ students: (data ?? []).map((row) => withStudentCode(row)) });
+    return NextResponse.json({ students: data ?? [] });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 400 });
   }
