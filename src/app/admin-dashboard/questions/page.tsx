@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { getCurrentStaff } from "@/lib/storage";
@@ -26,7 +26,7 @@ function createEmptyQuestion(type: ExperimentType, module: AssessmentModule): Qu
   };
 }
 
-export default function AdminQuestionEditorPage() {
+function AdminQuestionEditorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialType = (searchParams.get("type") || "ECG").toUpperCase() as ExperimentType;
@@ -318,6 +318,30 @@ export default function AdminQuestionEditorPage() {
                 ))}
               </div>
             )}
+          </section>
+        </section>
+      </main>
+    </>
+  );
+}
+
+export default function AdminQuestionEditorPage() {
+  return (
+    <Suspense fallback={<AdminQuestionEditorFallback />}>
+      <AdminQuestionEditorContent />
+    </Suspense>
+  );
+}
+
+function AdminQuestionEditorFallback() {
+  return (
+    <>
+      <AppHeader />
+      <main className="page-shell">
+        <section className="layout-container space-y-6">
+          <section className="section-card">
+            <h1 className="text-3xl font-bold text-slate-900">Question Bank Editor</h1>
+            <p className="mt-2 text-sm text-slate-600">Loading editor...</p>
           </section>
         </section>
       </main>
