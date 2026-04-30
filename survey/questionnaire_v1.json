@@ -1,0 +1,115 @@
+{
+  "instrument_id": "TAM-OER-001",
+  "version": "1.0",
+  "date_created": "2026-04-30",
+  "language": "en",
+  "scale": "5-point",
+  "anchors": {
+    "1": "Strongly disagree",
+    "2": "Disagree",
+    "3": "Neutral",
+    "4": "Agree",
+    "5": "Strongly agree"
+  },
+  "questions": {
+    "ECG": [
+      {
+        "id": "ecg-survey-pu-1",
+        "section": "analysis",
+        "text": "Using this learning technology improves my learning effectiveness.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "PU"
+      },
+      {
+        "id": "ecg-survey-pu-2",
+        "section": "analysis",
+        "text": "This tool increases my learning productivity.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "PU"
+      },
+      {
+        "id": "ecg-survey-peou-1",
+        "section": "analysis",
+        "text": "Learning to use this tool was easy for me.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "PEOU"
+      },
+      {
+        "id": "ecg-survey-atu-1",
+        "section": "analysis",
+        "text": "I like using this learning technology.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "ATU"
+      },
+      {
+        "id": "ecg-survey-bi-1",
+        "section": "analysis",
+        "text": "I intend to use this tool in the future.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "BI"
+      },
+      {
+        "id": "ecg-survey-oer-1",
+        "section": "analysis",
+        "text": "I am familiar with OER materials available for this subject.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "OER_AWARE"
+      },
+      {
+        "id": "ecg-survey-oer-2",
+        "section": "analysis",
+        "text": "OER materials for this topic are high quality.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "OER_QUALITY"
+      },
+      {
+        "id": "ecg-survey-oer-3",
+        "section": "analysis",
+        "text": "I am willing to adapt OER materials for my own learning.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "OER_REUSE"
+      },
+      {
+        "id": "ecg-survey-oer-4",
+        "section": "analysis",
+        "text": "I understand the licensing (e.g., CC BY) of OER I use.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "OER_LICENSE"
+      },
+      {
+        "id": "ecg-survey-oer-5",
+        "section": "analysis",
+        "text": "Lack of time prevents me from finding/adapting OER.",
+        "options": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        "answerIndex": null,
+        "construct": "OER_BARRIERS"
+      },
+      {
+        "id": "ecg-survey-open-1",
+        "section": "analysis",
+        "text": "What OER sources do you use? (free text)",
+        "options": ["Open response"],
+        "answerText": null,
+        "construct": "OER_SOURCES"
+      },
+      {
+        "id": "ecg-survey-open-2",
+        "section": "analysis",
+        "text": "What are the main barriers to using/adapting OER? (free text)",
+        "options": ["Open response"],
+        "answerText": null,
+        "construct": "OER_BARRIERS_TEXT"
+      }
+    ],
+    "EMG": []
+  }
+}

@@ -185,11 +185,46 @@ join experiments e on e.id = a.experiment_id;
 create table if not exists question_banks (
   id uuid primary key default gen_random_uuid(),
   experiment_type text not null check (experiment_type in ('EMG', 'ECG')),
-  module text not null check (module in ('pre-test', 'post-test')),
+  module text not null check (module in ('pre-test', 'post-test', 'survey')),
   questions jsonb not null,
+  metadata jsonb,
   updated_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   unique (experiment_type, module)
 );
 
 create index if not exists idx_question_banks_experiment_module on question_banks(experiment_type, module);
+
+-- Store per-question survey responses (for `survey` module question banks).
+create table if not exists survey_question_responses (
+  id uuid primary key default gen_random_uuid(),
+  attempt_id uuid not null references attempts(id) on delete cascade,
+  student_id uuid references students(id) on delete cascade,
+  experiment_type text not null check (experiment_type in ('EMG', 'ECG')),
+  module text not null check (module = 'survey'),
+  question_id text not null,
+  answer_index integer,
+  answer_text text,
+  instrument_id text,
+  instrument_version text,
+  created_at timestamptz not null default now()
+);
+
+alter table survey_question_responses add column if not exists student_id uuid references students(id) on delete cascade;
+
+update survey_question_responses sr
+set student_id = a.student_id
+from attempts a
+where sr.attempt_id = a.id
+  and sr.student_id is null;
+
+create index if not exists idx_survey_qr_attempt on survey_question_responses(attempt_id);
+create index if not exists idx_survey_qr_student on survey_question_responses(student_id);
+create index if not exists idx_survey_qr_question on survey_question_responses(question_id);
+
+-- Sync trigger to ensure student_id matches attempt mapping
+drop trigger if exists trg_survey_qr_sync_student on survey_question_responses;
+create trigger trg_survey_qr_sync_student
+before insert or update on survey_question_responses
+for each row
+execute function sync_student_from_attempt();

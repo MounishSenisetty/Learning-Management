@@ -16,7 +16,7 @@ interface QuestionsResponse {
 }
 
 function createEmptyQuestion(type: ExperimentType, module: AssessmentModule): Question {
-  const prefix = module === "pre-test" ? "pre" : "post";
+  const prefix = module === "pre-test" ? "pre" : module === "post-test" ? "post" : "survey";
   return {
     id: `${type.toLowerCase()}-${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     section: "analysis",
@@ -33,7 +33,7 @@ function AdminQuestionEditorContent() {
   const initialModule = (searchParams.get("module") || "pre-test") as AssessmentModule;
 
   const [experimentType, setExperimentType] = useState<ExperimentType>(initialType === "EMG" ? "EMG" : "ECG");
-  const [module, setModule] = useState<AssessmentModule>(initialModule === "post-test" ? "post-test" : "pre-test");
+  const [module, setModule] = useState<AssessmentModule>(initialModule);
   const [questions, setQuestions] = useState<Question[]>(getDefaultQuestions(experimentType, module));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -48,7 +48,8 @@ function AdminQuestionEditorContent() {
   }, [router]);
 
   const pageTitle = useMemo(() => {
-    return `${experimentType} ${module === "pre-test" ? "Pre-test" : "Post-test"} Questions`;
+    const label = module === "pre-test" ? "Pre-test" : module === "post-test" ? "Post-test" : "Survey";
+    return `${experimentType} ${label} Questions`;
   }, [experimentType, module]);
 
   const loadQuestions = useCallback(async () => {
@@ -223,6 +224,7 @@ function AdminQuestionEditorContent() {
                 <select className="input" value={module} onChange={(event) => setModule(event.target.value as AssessmentModule)}>
                   <option value="pre-test">Pre-test</option>
                   <option value="post-test">Post-test</option>
+                  <option value="survey">Survey</option>
                 </select>
               </label>
             </div>

@@ -9,7 +9,7 @@ export interface Question {
   hint?: string;
 }
 
-export type AssessmentModule = "pre-test" | "post-test";
+export type AssessmentModule = "pre-test" | "post-test" | "survey";
 
 const commonQuestions: Record<ExperimentType, Question[]> = {
   ECG: [
@@ -109,6 +109,126 @@ const defaultAssessmentQuestions: Record<AssessmentModule, Record<ExperimentType
       ...question,
       options: [...question.options],
     })),
+  },
+  "survey": {
+    ECG: [
+      // TAM - Perceived Usefulness
+      {
+        id: "ecg-survey-pu-1",
+        section: "analysis",
+        text: "Using this learning technology improves my learning effectiveness.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 3,
+      },
+      {
+        id: "ecg-survey-pu-2",
+        section: "analysis",
+        text: "This tool increases my learning productivity.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 3,
+      },
+      {
+        id: "ecg-survey-peou-1",
+        section: "analysis",
+        text: "Learning to use this tool was easy for me.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 3,
+      },
+      {
+        id: "ecg-survey-atu-1",
+        section: "analysis",
+        text: "I like using this learning technology.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 3,
+      },
+      {
+        id: "ecg-survey-bi-1",
+        section: "analysis",
+        text: "I intend to use this tool in the future.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 3,
+      },
+      // OER
+      {
+        id: "ecg-survey-oer-1",
+        section: "analysis",
+        text: "I am familiar with OER materials available for this subject.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 2,
+      },
+      {
+        id: "ecg-survey-oer-2",
+        section: "analysis",
+        text: "OER materials for this topic are high quality.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 2,
+      },
+      {
+        id: "ecg-survey-oer-3",
+        section: "analysis",
+        text: "I am willing to adapt OER materials for my own learning.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 3,
+      },
+      {
+        id: "ecg-survey-oer-4",
+        section: "analysis",
+        text: "I understand the licensing (e.g., CC BY) of OER I use.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 2,
+      },
+      {
+        id: "ecg-survey-oer-5",
+        section: "analysis",
+        text: "Lack of time prevents me from finding/adapting OER.",
+        options: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+        answerIndex: 3,
+      },
+      // Open-ended placeholders
+      {
+        id: "ecg-survey-open-1",
+        section: "analysis",
+        text: "What OER sources do you use? (free text)",
+        options: ["Open response"],
+        answerIndex: 0,
+      },
+      {
+        id: "ecg-survey-open-2",
+        section: "analysis",
+        text: "What are the main barriers to using/adapting OER? (free text)",
+        options: ["Open response"],
+        answerIndex: 0,
+      },
+    ],
+    EMG: [
+      // Use the same set for EMG (IDs namespaced for EMG)
+      ...["pu-1", "pu-2", "peou-1", "atu-1", "bi-1", "oer-1", "oer-2", "oer-3", "oer-4", "oer-5", "open-1", "open-2"].map((suffix, idx) => {
+        const textMap: Record<string, string> = {
+          "pu-1": "Using this learning technology improves my learning effectiveness.",
+          "pu-2": "This tool increases my learning productivity.",
+          "peou-1": "Learning to use this tool was easy for me.",
+          "atu-1": "I like using this learning technology.",
+          "bi-1": "I intend to use this tool in the future.",
+          "oer-1": "I am familiar with OER materials available for this subject.",
+          "oer-2": "OER materials for this topic are high quality.",
+          "oer-3": "I am willing to adapt OER materials for my own learning.",
+          "oer-4": "I understand the licensing (e.g., CC BY) of OER I use.",
+          "oer-5": "Lack of time prevents me from finding/adapting OER.",
+          "open-1": "What OER sources do you use? (free text)",
+          "open-2": "What are the main barriers to using/adapting OER? (free text)",
+        };
+
+        const key = suffix;
+        const isOpen = key.startsWith("open");
+        return {
+          id: `emg-survey-${key}`,
+          section: "analysis",
+          text: textMap[key],
+          options: isOpen ? ["Open response"] : ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+          answerIndex: isOpen ? 0 : 2,
+        } as Question;
+      }),
+    ],
   },
 };
 
