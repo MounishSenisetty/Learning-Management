@@ -228,3 +228,20 @@ create trigger trg_survey_qr_sync_student
 before insert or update on survey_question_responses
 for each row
 execute function sync_student_from_attempt();
+
+-- Staff credentials table for authentication
+create table if not exists staff_credentials (
+  id uuid primary key default gen_random_uuid(),
+  username text not null unique,
+  password_hash text not null,
+  role text not null check (role in ('admin', 'teacher')),
+  full_name text,
+  email text,
+  is_active boolean not null default true,
+  last_login timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_staff_username on staff_credentials(username);
+create index if not exists idx_staff_role on staff_credentials(role);
