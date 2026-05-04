@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getDefaultQuestions } from "@/lib/questions";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
-const moduleSchema = z.enum(["pre-test", "post-test"]);
+const moduleSchema = z.enum(["pre-test", "post-test", "survey"]);
 const experimentTypeSchema = z.enum(["ECG", "EMG"]);
 const sectionSchema = z.enum(["equipment", "preparation", "calibration", "recording", "analysis"]);
 

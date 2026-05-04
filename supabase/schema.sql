@@ -195,37 +195,69 @@ create table if not exists question_banks (
 
 create index if not exists idx_question_banks_experiment_module on question_banks(experiment_type, module);
 
--- Store per-question survey responses (for `survey` module question banks).
-create table if not exists survey_question_responses (
+-- Store a TAM survey submission per attempt.
+create table if not exists tam_survey_responses (
   id uuid primary key default gen_random_uuid(),
   attempt_id uuid not null references attempts(id) on delete cascade,
   student_id uuid references students(id) on delete cascade,
   experiment_type text not null check (experiment_type in ('EMG', 'ECG')),
-  module text not null check (module = 'survey'),
+  instrument_id text not null default 'TAM-001',
+  instrument_version text not null default '1.0',
+  feedback_text text,
+  created_at timestamptz not null default now(),
+  unique (attempt_id)
+);
+
+alter table tam_survey_responses add column if not exists student_id uuid references students(id) on delete cascade;
+
+update tam_survey_responses tsr
+set student_id = a.student_id
+from attempts a
+where tsr.attempt_id = a.id
+  and tsr.student_id is null;
+
+create index if not exists idx_tam_survey_attempt on tam_survey_responses(attempt_id);
+create index if not exists idx_tam_survey_student on tam_survey_responses(student_id);
+
+-- Store one TAM item response per question.
+create table if not exists tam_survey_item_responses (
+  id uuid primary key default gen_random_uuid(),
+  attempt_id uuid not null references attempts(id) on delete cascade,
+  student_id uuid references students(id) on delete cascade,
+  experiment_type text not null check (experiment_type in ('EMG', 'ECG')),
   question_id text not null,
-  answer_index integer,
-  answer_text text,
+  construct text not null check (construct in ('PU', 'PEOU', 'ATU', 'BI')),
+  answer_index smallint not null check (answer_index between 1 and 5),
+  answer_text text not null,
   instrument_id text,
   instrument_version text,
+  is_reverse_scored boolean not null default false,
   created_at timestamptz not null default now()
 );
 
-alter table survey_question_responses add column if not exists student_id uuid references students(id) on delete cascade;
+alter table tam_survey_item_responses add column if not exists student_id uuid references students(id) on delete cascade;
 
-update survey_question_responses sr
+update tam_survey_item_responses tsir
 set student_id = a.student_id
 from attempts a
-where sr.attempt_id = a.id
-  and sr.student_id is null;
+where tsir.attempt_id = a.id
+  and tsir.student_id is null;
 
-create index if not exists idx_survey_qr_attempt on survey_question_responses(attempt_id);
-create index if not exists idx_survey_qr_student on survey_question_responses(student_id);
-create index if not exists idx_survey_qr_question on survey_question_responses(question_id);
+create index if not exists idx_tam_survey_item_attempt on tam_survey_item_responses(attempt_id);
+create index if not exists idx_tam_survey_item_student on tam_survey_item_responses(student_id);
+create index if not exists idx_tam_survey_item_question on tam_survey_item_responses(question_id);
+create index if not exists idx_tam_survey_item_construct on tam_survey_item_responses(construct);
 
--- Sync trigger to ensure student_id matches attempt mapping
-drop trigger if exists trg_survey_qr_sync_student on survey_question_responses;
-create trigger trg_survey_qr_sync_student
-before insert or update on survey_question_responses
+-- Sync triggers to ensure student_id matches attempt mapping
+drop trigger if exists trg_tam_survey_sync_student on tam_survey_responses;
+create trigger trg_tam_survey_sync_student
+before insert or update on tam_survey_responses
+for each row
+execute function sync_student_from_attempt();
+
+drop trigger if exists trg_tam_survey_item_sync_student on tam_survey_item_responses;
+create trigger trg_tam_survey_item_sync_student
+before insert or update on tam_survey_item_responses
 for each row
 execute function sync_student_from_attempt();
 

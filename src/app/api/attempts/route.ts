@@ -2,6 +2,31 @@ import { NextResponse } from "next/server";
 import { createAttemptSchema } from "@/lib/validation";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
+const scaleLabels = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"] as const;
+
+const tamQuestionMeta: Record<string, { construct: string }> = {
+  "ecg-survey-pu-1": { construct: "PU" },
+  "ecg-survey-pu-2": { construct: "PU" },
+  "ecg-survey-pu-3": { construct: "PU" },
+  "ecg-survey-peou-1": { construct: "PEOU" },
+  "ecg-survey-peou-2": { construct: "PEOU" },
+  "ecg-survey-peou-3": { construct: "PEOU" },
+  "ecg-survey-atu-1": { construct: "ATU" },
+  "ecg-survey-atu-2": { construct: "ATU" },
+  "ecg-survey-bi-1": { construct: "BI" },
+  "ecg-survey-bi-2": { construct: "BI" },
+  "emg-survey-pu-1": { construct: "PU" },
+  "emg-survey-pu-2": { construct: "PU" },
+  "emg-survey-pu-3": { construct: "PU" },
+  "emg-survey-peou-1": { construct: "PEOU" },
+  "emg-survey-peou-2": { construct: "PEOU" },
+  "emg-survey-peou-3": { construct: "PEOU" },
+  "emg-survey-atu-1": { construct: "ATU" },
+  "emg-survey-atu-2": { construct: "ATU" },
+  "emg-survey-bi-1": { construct: "BI" },
+  "emg-survey-bi-2": { construct: "BI" },
+};
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -45,18 +70,42 @@ export async function POST(request: Request) {
 
     if (attemptError) throw attemptError;
 
-    const { error: surveyError } = await supabase.from("survey_responses").insert({
+    const { error: surveyError } = await supabase.from("tam_survey_responses").insert({
       attempt_id: attempt.id,
       student_id: parsed.studentId,
-      understanding: parsed.survey.understanding,
-      engagement: parsed.survey.engagement,
-      difficulty: parsed.survey.difficulty,
-      usability: parsed.survey.usability,
-      confidence: parsed.survey.confidence,
+      experiment_type: parsed.experimentType,
+      instrument_id: "TAM-001",
+      instrument_version: "1.0",
       feedback_text: parsed.survey.feedbackText ?? null,
     });
 
     if (surveyError) throw surveyError;
+
+    const surveyItemRows = Object.entries(parsed.survey.answers).flatMap(([questionId, answerIndex]) => {
+      const meta = tamQuestionMeta[questionId];
+      if (!meta) return [];
+      const answerText = scaleLabels[answerIndex] ?? scaleLabels[2];
+
+      return [
+        {
+          attempt_id: attempt.id,
+          student_id: parsed.studentId,
+          experiment_type: parsed.experimentType,
+          question_id: questionId,
+          construct: meta.construct,
+          answer_index: answerIndex + 1,
+          answer_text: answerText,
+          instrument_id: "TAM-001",
+          instrument_version: "1.0",
+          is_reverse_scored: false,
+        },
+      ];
+    });
+
+    if (surveyItemRows.length) {
+      const { error: itemError } = await supabase.from("tam_survey_item_responses").insert(surveyItemRows);
+      if (itemError) throw itemError;
+    }
 
     const events: Array<{ attempt_id: string; student_id: string; event_type: string; event_value: Record<string, unknown> }> = [];
 

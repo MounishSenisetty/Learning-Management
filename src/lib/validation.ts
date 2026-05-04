@@ -30,11 +30,7 @@ export const legacyPinSetupSchema = z.object({
 });
 
 export const surveySchema = z.object({
-  understanding: z.number().int().min(1).max(5),
-  engagement: z.number().int().min(1).max(5),
-  difficulty: z.number().int().min(1).max(5),
-  usability: z.number().int().min(1).max(5),
-  confidence: z.number().int().min(1).max(5),
+  answers: z.record(z.number().int().min(0).max(4)),
   feedbackText: z.string().max(4000).optional(),
 });
 
