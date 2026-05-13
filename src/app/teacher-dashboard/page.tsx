@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { StudentAnalyticsExplorer } from "@/components/student-analytics-explorer";
+import { NeuroSymbolicPanel } from "@/components/neuro-symbolic-panel";
 import { clearCurrentStaff, getCurrentStaff } from "@/lib/storage";
 import { buildStudentPerformanceSummaries } from "@/lib/staff-analytics";
+import { NeuroSymbolicInsight } from "@/lib/analytics";
 import { AttemptRecord, Student } from "@/types/domain";
 
 interface OverviewResponse {
@@ -33,8 +35,10 @@ export default function TeacherDashboardPage() {
   const staffRole = useSyncExternalStore(subscribeStaffSession, getStaffRoleSnapshot, getServerStaffRoleSnapshot);
   const [students, setStudents] = useState<Student[]>([]);
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
+  const [neuroSymbolic, setNeuroSymbolic] = useState<NeuroSymbolicInsight | null>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [nsLoading, setNsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,6 +70,27 @@ export default function TeacherDashboardPage() {
       })
       .finally(() => setLoading(false));
   }, [router, staffRole]);
+
+  // Fetch neuro-symbolic insights when overview data is available
+  useEffect(() => {
+    if (!overview || overview.attempts.length === 0) {
+      return;
+    }
+
+    setNsLoading(true);
+    fetch("/api/analytics/neuro-symbolic")
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error("Failed to load neuro-symbolic insights");
+        }
+        const data = (await res.json()) as NeuroSymbolicInsight;
+        setNeuroSymbolic(data);
+      })
+      .catch((e: Error) => {
+        console.error("Neuro-symbolic error:", e.message);
+      })
+      .finally(() => setNsLoading(false));
+  }, [overview]);
 
   const currentRole = staffRole;
 
@@ -127,6 +152,8 @@ export default function TeacherDashboardPage() {
             </section>
 
             <StudentAnalyticsExplorer students={students} attempts={overview?.attempts ?? []} theme="teacher" />
+
+            <NeuroSymbolicPanel insights={neuroSymbolic} loading={nsLoading} />
 
             <section className="grid gap-6 xl:grid-cols-2">
               <div className="section-card">

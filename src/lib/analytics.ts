@@ -222,3 +222,254 @@ export function computeCohortInsights(attempts: Array<Record<string, unknown>>) 
     }))
     .sort((a, b) => b.avgPostScore - a.avgPostScore);
 }
+
+// Neuro-Symbolic Reasoning Layer
+
+export interface LearningPattern {
+  studentId: string;
+  patternType: "efficient" | "struggling" | "improving" | "plateau" | "inconsistent" | "engaged";
+  confidence: number;
+  description: string;
+  metrics: {
+    avgGain: number;
+    avgTime: number;
+    consistency: number;
+    engagement: number;
+  };
+}
+
+export interface NeuroSymbolicCluster {
+  clusterId: string;
+  label: string;
+  size: number;
+  characteristics: string[];
+  studentIds: string[];
+  interventionSuggestion: string;
+}
+
+export interface NeuroSymbolicInsight {
+  timestamp: string;
+  totalStudents: number;
+  learningPatterns: LearningPattern[];
+  behavioralClusters: NeuroSymbolicCluster[];
+  overallFindings: string[];
+  priorityInterventions: Array<{
+    priority: "high" | "medium" | "low";
+    intervention: string;
+    affectedStudents: number;
+  }>;
+}
+
+function classifyLearningPattern(
+  studentAttempts: Array<Record<string, unknown>>,
+  studentId: string,
+): LearningPattern {
+  if (studentAttempts.length === 0) {
+    return {
+      studentId,
+      patternType: "inconsistent",
+      confidence: 0.3,
+      description: "No data available",
+      metrics: { avgGain: 0, avgTime: 0, consistency: 0, engagement: 0 },
+    };
+  }
+
+  const gains = studentAttempts.map((a) => Number(a.learning_gain ?? 0));
+  const times = studentAttempts.map((a) => Number(a.time_taken_seconds ?? 0));
+  const engagements = studentAttempts.map((a) => Number(a.engagement_score ?? 0));
+
+  const avgGain = average(gains);
+  const avgTime = average(times);
+  const avgEngagement = average(engagements);
+  const gainVariance = variance(gains);
+  const consistency = 1 / (1 + Math.sqrt(gainVariance));
+
+  // Symbolic rules for pattern classification
+  let patternType: LearningPattern["patternType"] = "inconsistent";
+  let confidence = 0.5;
+  let description = "";
+
+  if (avgGain > 15 && avgTime < 120 && avgEngagement > 0.7) {
+    patternType = "efficient";
+    confidence = 0.95;
+    description = "Strong learner with high efficiency and engagement";
+  } else if (avgGain > 15 && consistency > 0.8) {
+    patternType = "improving";
+    confidence = 0.85;
+    description = "Consistent progress with sustained learning gains";
+  } else if (avgGain < 5 && studentAttempts.length > 2) {
+    patternType = "struggling";
+    confidence = 0.8;
+    description = "Minimal learning gains despite multiple attempts";
+  } else if (Math.abs(gains[gains.length - 1] - average(gains.slice(0, -1))) < 2) {
+    patternType = "plateau";
+    confidence = 0.75;
+    description = "Learning has plateaued with no recent improvement";
+  } else if (avgEngagement > 0.8) {
+    patternType = "engaged";
+    confidence = 0.88;
+    description = "Highly engaged learner with strong participation";
+  }
+
+  return {
+    studentId,
+    patternType,
+    confidence,
+    description,
+    metrics: {
+      avgGain,
+      avgTime,
+      consistency,
+      engagement: avgEngagement,
+    },
+  };
+}
+
+function clusterBehaviors(
+  patterns: LearningPattern[],
+): NeuroSymbolicCluster[] {
+  const clusters: NeuroSymbolicCluster[] = [];
+  const clustered = new Set<string>();
+
+  // Cluster 1: High performers
+  const highPerformers = patterns.filter(
+    (p) => (p.patternType === "efficient" || p.patternType === "improving") && !clustered.has(p.studentId),
+  );
+  if (highPerformers.length > 0) {
+    highPerformers.forEach((p) => clustered.add(p.studentId));
+    clusters.push({
+      clusterId: "high-performers",
+      label: "High Performers",
+      size: highPerformers.length,
+      characteristics: ["High learning gains", "Efficient time management", "Strong engagement"],
+      studentIds: highPerformers.map((p) => p.studentId),
+      interventionSuggestion: "Provide advanced challenges and peer mentoring opportunities",
+    });
+  }
+
+  // Cluster 2: Struggling learners
+  const struggling = patterns.filter(
+    (p) => p.patternType === "struggling" && !clustered.has(p.studentId),
+  );
+  if (struggling.length > 0) {
+    struggling.forEach((p) => clustered.add(p.studentId));
+    clusters.push({
+      clusterId: "struggling",
+      label: "Struggling Learners",
+      size: struggling.length,
+      characteristics: ["Low learning gains", "Multiple attempts needed", "May need support"],
+      studentIds: struggling.map((p) => p.studentId),
+      interventionSuggestion: "Offer targeted tutorial support and scaffold learning pathways",
+    });
+  }
+
+  // Cluster 3: Plateaued learners
+  const plateaued = patterns.filter(
+    (p) => p.patternType === "plateau" && !clustered.has(p.studentId),
+  );
+  if (plateaued.length > 0) {
+    plateaued.forEach((p) => clustered.add(p.studentId));
+    clusters.push({
+      clusterId: "plateaued",
+      label: "Plateaued Learners",
+      size: plateaued.length,
+      characteristics: ["No recent progress", "Engagement may be declining", "Need motivation boost"],
+      studentIds: plateaued.map((p) => p.studentId),
+      interventionSuggestion:
+        "Introduce new challenges or alternate learning modalities to reignite engagement",
+    });
+  }
+
+  // Cluster 4: Engaged explorers
+  const engaged = patterns.filter(
+    (p) => p.patternType === "engaged" && !clustered.has(p.studentId),
+  );
+  if (engaged.length > 0) {
+    engaged.forEach((p) => clustered.add(p.studentId));
+    clusters.push({
+      clusterId: "engaged-explorers",
+      label: "Engaged Explorers",
+      size: engaged.length,
+      characteristics: ["High engagement", "Active participation", "Consistent interaction"],
+      studentIds: engaged.map((p) => p.studentId),
+      interventionSuggestion: "Leverage their engagement to support peer learning initiatives",
+    });
+  }
+
+  return clusters;
+}
+
+export function computeNeuroSymbolicInsights(
+  attempts: Array<Record<string, unknown>>,
+): NeuroSymbolicInsight {
+  const grouped = new Map<string, Array<Record<string, unknown>>>();
+
+  for (const attempt of attempts) {
+    const studentId = String(attempt.student_id ?? "unknown");
+    const rows = grouped.get(studentId) ?? [];
+    rows.push(attempt);
+    grouped.set(studentId, rows);
+  }
+
+  const patterns = Array.from(grouped.entries()).map(([studentId, rows]) =>
+    classifyLearningPattern(rows, studentId),
+  );
+
+  const clusters = clusterBehaviors(patterns);
+
+  // Generate overall findings
+  const overallFindings: string[] = [];
+
+  const efficientCount = patterns.filter((p) => p.patternType === "efficient").length;
+  if (efficientCount > 0) {
+    overallFindings.push(
+      `${efficientCount} student(s) demonstrate highly efficient learning patterns with quick comprehension and strong engagement.`,
+    );
+  }
+
+  const strugglingCount = patterns.filter((p) => p.patternType === "struggling").length;
+  if (strugglingCount > 0) {
+    overallFindings.push(
+      `${strugglingCount} student(s) require targeted intervention as they show minimal learning gains despite multiple attempts.`,
+    );
+  }
+
+  const avgGain = average(patterns.map((p) => p.metrics.avgGain));
+  overallFindings.push(`Average learning gain across all students: ${avgGain.toFixed(2)} points.`);
+
+  // Priority interventions
+  const priorityInterventions = [
+    ...(strugglingCount > 0
+      ? [
+          {
+            priority: "high" as const,
+            intervention: "Implement targeted tutoring sessions for struggling learners",
+            affectedStudents: strugglingCount,
+          },
+        ]
+      : []),
+    ...(clusters.some((c) => c.clusterId === "plateaued")
+      ? [
+          {
+            priority: "medium" as const,
+            intervention: "Introduce new learning modalities to re-engage plateaued students",
+            affectedStudents: clusters.find((c) => c.clusterId === "plateaued")?.size ?? 0,
+          },
+        ]
+      : []),
+    {
+      priority: "low" as const,
+      intervention: "Expand advanced challenges for high performers",
+      affectedStudents: efficientCount,
+    },
+  ];
+
+  return {
+    timestamp: new Date().toISOString(),
+    totalStudents: grouped.size,
+    learningPatterns: patterns,
+    behavioralClusters: clusters,
+    overallFindings,
+    priorityInterventions,
+  };
+}
