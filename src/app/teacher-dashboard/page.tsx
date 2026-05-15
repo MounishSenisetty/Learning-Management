@@ -154,7 +154,7 @@ export default function TeacherDashboardPage() {
 
             <StudentAnalyticsExplorer students={students} attempts={overview?.attempts ?? []} theme="teacher" />
 
-            <NeuroSymbolicPanel insights={neuroSymbolic} loading={nsLoading} />
+            <NeuroSymbolicPanel insights={neuroSymbolic} students={students} loading={nsLoading} />
 
             <section className="section-card">
               <RecommendationsTable />

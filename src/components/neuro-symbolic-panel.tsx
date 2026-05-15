@@ -1,13 +1,15 @@
 "use client";
 
 import { NeuroSymbolicInsight } from "@/lib/analytics";
+import { Student } from "@/types/domain";
 
 interface NeuroSymbolicPanelProps {
   insights: NeuroSymbolicInsight | null;
+  students?: Student[];
   loading?: boolean;
 }
 
-export function NeuroSymbolicPanel({ insights, loading = false }: NeuroSymbolicPanelProps) {
+export function NeuroSymbolicPanel({ insights, students = [], loading = false }: NeuroSymbolicPanelProps) {
   if (loading) {
     return (
       <section className="section-card">
@@ -86,18 +88,20 @@ export function NeuroSymbolicPanel({ insights, loading = false }: NeuroSymbolicP
         <div className="mt-6 max-h-96 overflow-y-auto rounded-lg border border-slate-200">
           <table className="w-full text-left text-sm">
             <thead className="sticky top-0 bg-slate-50 text-slate-700">
-              <tr>
-                <th className="px-4 py-3">Student ID</th>
-                <th className="px-4 py-3">Pattern</th>
-                <th className="px-4 py-3">Confidence</th>
-                <th className="px-4 py-3">Avg Gain</th>
-                <th className="px-4 py-3">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {insights.learningPatterns.slice(0, 20).map((pattern) => (
-                <tr key={pattern.studentId} className="border-t border-slate-100 hover:bg-cyan-50/40">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-600">{pattern.studentId.slice(0, 8)}...</td>
+                <tr>
+                  <th className="px-4 py-3">Student</th>
+                  <th className="px-4 py-3">Pattern</th>
+                  <th className="px-4 py-3">Confidence</th>
+                  <th className="px-4 py-3">Avg Gain</th>
+                  <th className="px-4 py-3">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {insights.learningPatterns.slice(0, 20).map((pattern) => (
+                  <tr key={pattern.studentId} className="border-t border-slate-100 hover:bg-cyan-50/40">
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {students.find((s) => String(s.id) === String(pattern.studentId))?.full_name ?? pattern.studentId.slice(0, 8) + "..."}
+                    </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
