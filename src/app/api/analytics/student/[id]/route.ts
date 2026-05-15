@@ -15,7 +15,22 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
     if (error) throw error;
 
-    const attempts = data ?? [];
+    const attemptsRaw = data ?? [];
+    const attemptsMap = new Map<string, any>();
+    for (const a of attemptsRaw) {
+      const key = String(a.attempt_id);
+      const existing = attemptsMap.get(key);
+      if (!existing) {
+        attemptsMap.set(key, a);
+        continue;
+      }
+      const existingTs = new Date(existing.created_at).getTime();
+      const currentTs = new Date(a.created_at).getTime();
+      if (currentTs > existingTs) {
+        attemptsMap.set(key, a);
+      }
+    }
+    const attempts = Array.from(attemptsMap.values());
     const attemptIds = attempts.map((attempt) => String(attempt.attempt_id));
 
     const { data: events, error: eventsError } = await supabase

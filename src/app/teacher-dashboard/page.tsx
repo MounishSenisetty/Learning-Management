@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { StudentAnalyticsExplorer } from "@/components/student-analytics-explorer";
 import { NeuroSymbolicPanel } from "@/components/neuro-symbolic-panel";
+import RecommendationsTable from "@/components/recommendations-table";
 import { clearCurrentStaff, getCurrentStaff } from "@/lib/storage";
 import { buildStudentPerformanceSummaries } from "@/lib/staff-analytics";
 import { NeuroSymbolicInsight } from "@/lib/analytics";
@@ -154,6 +155,10 @@ export default function TeacherDashboardPage() {
             <StudentAnalyticsExplorer students={students} attempts={overview?.attempts ?? []} theme="teacher" />
 
             <NeuroSymbolicPanel insights={neuroSymbolic} loading={nsLoading} />
+
+            <section className="section-card">
+              <RecommendationsTable />
+            </section>
 
             <section className="grid gap-6 xl:grid-cols-2">
               <div className="section-card">
