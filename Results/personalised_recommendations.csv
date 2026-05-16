@@ -1,0 +1,73 @@
+student_name,student_id,experiment,last_attempt,pre_test_score,post_test_score,learning_gain,normalized_gain,neural_predicted_post,sym_mastery,sym_struggle,sym_hint_dependent,sym_speed_learner,sym_disengaged,recommended_difficulty,personalised_advice
+Abhishek Gowda,2dff07ff-0e06-4a05-99c7-8322423a5ef2,ECG,1,0.0,49.7,49.69,0.497,45.0,expert,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Aditya Menon,00897270-870b-45f2-bc51-c59831eb0105,ECG,1,33.3,67.9,34.56,0.518,62.6,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Aditya Nair,cea32a98-4800-4a61-bef1-7b42f7bf696b,ECG,1,20.0,55.3,35.32,0.442,56.2,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Aditya Nair,cea32a98-4800-4a61-bef1-7b42f7bf696b,EMG,1,0.0,57.5,57.49,0.575,52.9,expert,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Akash Kumar,31281d1d-b929-4de0-8da5-d50cd77b9378,ECG,2,53.1,51.2,-1.92,-0.041,55.6,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Akash Kumar,31281d1d-b929-4de0-8da5-d50cd77b9378,EMG,2,47.2,81.6,34.4,0.651,71.6,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Arjun Raju,77468745-ae06-4906-a58b-30d0172939ce,EMG,1,40.0,61.5,21.51,0.358,62.2,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Arjun Raju,77468745-ae06-4906-a58b-30d0172939ce,ECG,1,40.0,67.9,27.88,0.465,64.3,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Deeksha,f3b29cc4-b978-4977-8c87-af4ca213f73e,EMG,1,40.2,66.2,25.94,0.434,68.1,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Deeksha,f3b29cc4-b978-4977-8c87-af4ca213f73e,ECG,2,49.3,87.8,38.44,0.758,86.6,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Deepika K,e8e7465e-22d7-4316-b3bf-7938835caea6,EMG,2,49.4,61.6,12.17,0.24,66.3,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Deepika K,e8e7465e-22d7-4316-b3bf-7938835caea6,ECG,2,48.8,88.6,39.81,0.777,87.7,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Dhanush,519b5a99-c260-46dc-91c5-9d9e8f957e52,EMG,1,60.0,60.0,0.0,0.0,54.4,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Dhanush,519b5a99-c260-46dc-91c5-9d9e8f957e52,ECG,2,40.0,20.0,-20.0,-0.333,25.9,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Dinesh Babu,e70ba8c0-3b62-4b46-aed4-c2dbb78e0be3,EMG,1,40.0,90.5,50.45,0.841,86.5,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Karthik Naik,479c2754-66e0-4c2b-966c-03e8d7bc55ee,ECG,1,20.0,78.5,58.46,0.731,83.6,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Kavya Reddy,d978d468-51d7-4c46-95a4-3b51fbb01008,EMG,1,80.0,100.0,20.0,1.0,101.1,intermediate,True,True,True,True,increase,Increase challenge — high mastery detected.
+Kavya Reddy,d978d468-51d7-4c46-95a4-3b51fbb01008,ECG,1,60.0,83.9,23.94,0.599,80.2,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Kiran R,b1121c52-1327-4cc1-9137-f6cf8a55eb09,EMG,2,26.3,81.1,54.82,0.744,77.8,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Kiran R,b1121c52-1327-4cc1-9137-f6cf8a55eb09,ECG,2,54.6,83.5,28.87,0.636,77.2,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Lakshmi Hegde,a577e730-2a72-447a-9e40-04858700028e,ECG,1,40.0,88.7,48.67,0.811,94.0,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Manoj Sharma,d3838a9d-5a4d-48bd-bffb-11ff0ab4948a,ECG,1,40.0,66.2,26.16,0.436,63.3,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Manoj Sharma,d3838a9d-5a4d-48bd-bffb-11ff0ab4948a,EMG,1,40.0,42.0,2.01,0.034,46.3,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Meenakshi Iyer,ed0627dc-ef62-42a3-b1ee-d06aa8dbc50f,EMG,2,30.0,53.9,23.97,0.342,62.3,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Meenakshi Iyer,ed0627dc-ef62-42a3-b1ee-d06aa8dbc50f,ECG,2,51.7,60.6,8.93,0.185,66.9,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Mounish S,d5d42097-d372-48a6-956b-092c76096ec6,EMG,2,20.0,40.0,20.0,0.25,34.8,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Mounish S,d5d42097-d372-48a6-956b-092c76096ec6,ECG,4,20.0,60.0,40.0,0.5,60.9,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+N Ashrith Reddy,f1e36f9c-baee-4ad2-8591-7e47533fda97,EMG,1,40.0,20.0,-20.0,-0.333,33.3,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+N Ashrith Reddy,f1e36f9c-baee-4ad2-8591-7e47533fda97,ECG,2,20.0,20.0,0.0,0.0,37.8,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Nandini Naik,96107496-11d0-4a10-9500-37479bc502bb,EMG,1,0.0,53.8,53.77,0.538,47.9,expert,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Naveen Gupta,2d98aa3a-7155-461a-962f-ebf4a1c4cff8,EMG,1,60.0,60.4,0.42,0.011,59.1,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Naveen Gupta,2d98aa3a-7155-461a-962f-ebf4a1c4cff8,ECG,1,40.0,59.1,19.14,0.319,62.5,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Nemali Ashrith Reddy,90484de6-36da-4d11-b56f-3348a8885f83,ECG,1,0.0,20.0,20.0,0.2,22.6,expert,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Nemali Ashrith Reddy,90484de6-36da-4d11-b56f-3348a8885f83,EMG,1,60.0,40.0,-20.0,-0.5,43.8,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Nemali Ashrith Reddy,2becdccc-f94c-4a0a-a219-add34e757f27,ECG,1,40.0,40.0,0.0,0.0,40.6,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Nikhil Sai,c142b690-dbbc-46f2-af0b-8ae8929b3543,EMG,1,25.4,82.5,57.19,0.766,85.9,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Nikhil Sai,c142b690-dbbc-46f2-af0b-8ae8929b3543,ECG,1,37.5,53.1,15.66,0.251,57.7,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Pranav Babu,74d2b2ad-6d27-4214-ac05-786833e44c04,ECG,1,60.0,87.5,27.46,0.686,82.0,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Pranav Babu,74d2b2ad-6d27-4214-ac05-786833e44c04,EMG,1,20.0,63.7,43.69,0.546,62.1,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Priya,fb91451c-9ee6-412f-8db4-6d3be2fcd8f1,EMG,1,0.0,100.0,100.0,1.0,96.7,expert,True,True,True,True,increase,Increase challenge — high mastery detected.
+Priya,fb91451c-9ee6-412f-8db4-6d3be2fcd8f1,ECG,1,20.0,100.0,80.0,1.0,101.5,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+R. Karthik,23748989-7629-4ab5-9ec8-39a9aa1e4702,EMG,2,53.2,78.8,25.51,0.546,73.1,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+R. Karthik,23748989-7629-4ab5-9ec8-39a9aa1e4702,ECG,2,41.7,77.6,35.87,0.615,74.3,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+RR,aeaf67bb-a4c5-471f-8f1c-797dbe54568b,ECG,1,40.0,80.0,40.0,0.667,78.4,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+RR,aeaf67bb-a4c5-471f-8f1c-797dbe54568b,EMG,1,100.0,80.0,-20.0,,80.3,intermediate,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Rahul Dev,ac4bbb6e-d912-459a-a792-ede1d8fef8e2,ECG,2,48.2,75.8,27.59,0.533,79.2,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Rahul Dev,ac4bbb6e-d912-459a-a792-ede1d8fef8e2,EMG,2,45.1,72.2,27.08,0.493,67.8,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Rakesh Rao,a4c85ed0-4d06-48ba-b80d-584432d5cfb4,ECG,1,20.0,34.8,14.82,0.185,51.0,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Rakesh Rao,a4c85ed0-4d06-48ba-b80d-584432d5cfb4,EMG,1,20.0,60.0,40.02,0.5,59.6,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Rakhi,01cecc24-d584-49d5-8cbd-8e69db8458aa,ECG,1,80.0,80.0,0.0,0.0,80.2,intermediate,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Revanth.G,b137b20b-9690-48c9-9d12-26e28be46c4f,ECG,1,40.0,40.0,0.0,0.0,39.8,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Sandhiya Kennedy,0a15322f-c67b-47e0-bc04-85ce3f368058,ECG,1,20.0,100.0,80.0,1.0,101.0,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Sandy ,483b316c-cc6f-4cc2-8d47-436ed53c0560,EMG,1,20.0,100.0,80.0,1.0,98.4,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Sandy ,483b316c-cc6f-4cc2-8d47-436ed53c0560,ECG,1,60.0,100.0,40.0,1.0,106.5,beginner,True,True,True,True,increase,Increase challenge — high mastery detected.
+Sanjeev,c33b9fb4-3774-4ada-b8ff-94aa41ca6cd5,ECG,1,20.0,20.0,0.0,0.0,21.4,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Sathwikh P,249de2ef-3479-4c15-bbce-e944ea282bdc,ECG,2,20.4,88.2,67.75,0.852,86.0,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Sathwikh P,249de2ef-3479-4c15-bbce-e944ea282bdc,EMG,2,51.8,66.2,14.38,0.298,72.7,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Seetha,225ce9fc-3487-4d0e-9520-784945de83a9,ECG,1,20.0,40.0,20.0,0.25,41.9,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Sowmya Hegde,2b13195c-2773-459d-a6cb-3e35085f927c,EMG,1,33.3,89.6,56.29,0.844,76.0,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Sowmya Rao,9a4a2c84-4e8b-441e-a31d-90f0d1f38acf,ECG,1,33.3,56.8,23.43,0.351,57.9,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Sowmya Rao,9a4a2c84-4e8b-441e-a31d-90f0d1f38acf,EMG,1,20.0,78.9,58.91,0.736,75.7,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Suresh Rao,da42cf05-de55-4456-95fe-d5e89738bea2,ECG,1,80.0,95.0,15.01,0.75,95.5,intermediate,True,True,True,True,increase,Increase challenge — high mastery detected.
+Surya Teja,0587b9ce-0272-46be-a5ed-1e278b0f6dfe,EMG,2,20.9,78.7,57.8,0.731,82.3,novice,True,True,True,True,increase,Increase challenge — high mastery detected.
+Surya Teja,0587b9ce-0272-46be-a5ed-1e278b0f6dfe,ECG,2,35.6,61.2,25.61,0.398,62.5,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Swathi Gupta,2673d62e-3b0e-4ee8-a072-21383ef1ae38,EMG,1,40.0,67.8,27.84,0.464,66.7,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Swathi Sharma,8b459f64-de65-4847-81e6-cd98f5d1e502,EMG,1,0.0,11.1,11.07,0.111,28.4,expert,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Vijay Reddy,28052be7-e40b-42ac-b033-3c61934b6ca4,ECG,2,29.9,50.7,20.77,0.296,58.8,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+Vijay Reddy,28052be7-e40b-42ac-b033-3c61934b6ca4,EMG,2,46.9,80.4,33.57,0.632,68.2,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+example1,020e4244-1419-44f9-8957-1d784282e8f5,EMG,2,80.0,100.0,20.0,1.0,102.4,intermediate,True,True,True,True,increase,Increase challenge — high mastery detected.
+example1,020e4244-1419-44f9-8957-1d784282e8f5,ECG,1,33.3,60.0,26.67,0.4,39.0,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+pavan kumar,d471695d-ec1e-4e77-9284-996d146024f4,ECG,2,53.3,78.4,25.15,0.538,56.5,beginner,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
+pavan kumar,d471695d-ec1e-4e77-9284-996d146024f4,EMG,2,29.4,71.9,42.54,0.603,62.2,novice,True,True,True,True,decrease,Offer hints and scaffolding — student struggles.
