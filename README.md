@@ -1,16 +1,19 @@
 # Learning Management — Simulation Labs & Analytics
 
 
-## Authors
+## Project Team
 
-| Name                  | Roll Number      | Role                                                   |
-| --------------------- | ---------------- | ------------------------------------------------------ |
-| Nemali Ashrith Reddy  | AM.AI.U4AID23014 | Developer & Research Contributor                       |
-| Sandhiya Kennedy      | AM.AI.U4AID23056 | Developer & Research Contributor                       |
-| Senisetty Mounish     | AM.AI.U4AID23058 | Full-Stack Developer, Analytics & Research Contributor |
-| Akshay Reddy Velugati | AM.AI.U4AID23062 | Developer & Research Contributor                       |
+This project was developed by undergraduate students of the B.Tech Artificial Intelligence and Data Science program at Amrita Vishwa Vidyapeetham, Amritapuri.
+
+| Name                  | Roll Number      | Role                                                    |
+| --------------------- | ---------------- | ------------------------------------------------------- |
+| Nemali Ashrith Reddy  | AM.AI.U4AID23014 | Frontend Developer & UI/UX Designer                     |
+| Sandhiya Kennedy      | AM.AI.U4AID23056 | Database Engineer & Backend Developer                   |
+| Senisetty Mounish     | AM.AI.U4AID23058 | Learning Analytics & Full-Stack Developer |
+| Akshay Reddy Velugati | AM.AI.U4AID23062 | Simulation Developer & System Integration Engineer      |
 
 **Institution:** Amrita School of Computing, Amrita Vishwa Vidyapeetham, Amritapuri, Kollam, Kerala, India
+
 
 
 
