@@ -1,6 +1,22 @@
 # Learning Management — Simulation Labs & Analytics
 
+
+## Authors
+
+| Name                  | Roll Number      | Role                                                   |
+| --------------------- | ---------------- | ------------------------------------------------------ |
+| Nemali Ashrith Reddy  | AM.AI.U4AID23014 | Developer & Research Contributor                       |
+| Sandhiya Kennedy      | AM.AI.U4AID23056 | Developer & Research Contributor                       |
+| Senisetty Mounish     | AM.AI.U4AID23058 | Full-Stack Developer, Analytics & Research Contributor |
+| Akshay Reddy Velugati | AM.AI.U4AID23062 | Developer & Research Contributor                       |
+
+**Institution:** Amrita School of Computing, Amrita Vishwa Vidyapeetham, Amritapuri, Kollam, Kerala, India
+
+
+
 Comprehensive web platform for interactive physiology labs (EMG and ECG), student assessment, telemetry collection, and analytics with an added neuro-symbolic interpretation layer for teacher insights.
+
+
 
 ## Table of contents
 - Project overview
